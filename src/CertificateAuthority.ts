@@ -3,6 +3,7 @@
 
 import childProcess = require('child_process');
 import util = require('util');
+import fs = require('fs');
 
 import Q = require('q');
 
@@ -24,6 +25,18 @@ class CertificateAuthority {
         this._commonName = value;
         this.keyFileName = value + '-key.pem';
         this.caCertFileName = value + '-CA-cert.pem';
+    }
+
+    private _privateKey: string;
+
+    get privateKey() {
+        return this._privateKey;
+    }
+
+    private _certificate: string;
+
+    get certificate() {
+        return this._certificate;
     }
     
     /**
@@ -54,34 +67,30 @@ class CertificateAuthority {
 
             var req = childProcess.spawn('openssl',
                 [
-                    'req',
-                    '-newkey',
-                    'rsa:2048',
-                    '-sha256',
+                    'req', '-newkey', 'rsa:2048', '-sha256',
                     '-subj', util.format('/C=%s/ST=%s/O=%s/CN=%s',
                         this.countryName,
                         this.stateOrProvinceName,
                         this.organizationName,
                         this.commonName),
-                    '-nodes',
-                    '-keyout', this.keyFileName
-                ], {
-                    cwd: 'keys',
-                    stdio: verbose ? [null, null, process.stderr] : null
-                });
+                    '-nodes', '-keyout', this.keyFileName
+                ], { cwd: 'keys', stdio: verbose ? [null, null, process.stderr] : null });
 
-            req.on('close', (code) => {
-                if (code != 0) {
-                    reject(new Error('Generating CA request process exited with code ' + code));
-                }
-            });
+            var keyPromise = Q.Promise((resolve, reject) => {
+                req.on('close', (code) => {
+                    if (code == 0) {
+                        Q.nfcall(fs.readFile, 'keys/' + this.keyFileName)
+                            .then(resolve).catch(reject);
+                    } else {
+                        reject(new Error(
+                            'Generating CA request process exited with code ' + code));
+                    }
+                });
+            }).then((data: Buffer) => { this._privateKey = '' + data; }).catch(reject);
 
             var sign = childProcess.spawn('openssl',
                 [
-                    'x509',
-                    '-req',
-                    '-signkey', this.keyFileName,
-                    '-out', this.caCertFileName
+                    'x509', '-req', '-signkey', this.keyFileName, '-out', this.caCertFileName
                 ], {
                     cwd: 'keys',
                     stdio: verbose ? [null, process.stdout, process.stderr] : null
@@ -89,64 +98,56 @@ class CertificateAuthority {
 
             req.stdout.pipe(sign.stdin);
 
-            sign.on('close', (code) => {
-                if (code == 0) {
-                    resolve(this);
-                } else {
-                    reject(new Error('CA signing process exited with code ' + code));
-                }
-            });
+            var certPromise = Q.Promise((resolve, reject) => {
+                sign.on('close', (code) => {
+                    if (code == 0) {
+                        Q.nfcall(fs.readFile, 'keys/' + this.caCertFileName)
+                            .then(resolve).catch(reject);
+                    } else {
+                        reject(new Error('CA signing process exited with code ' + code));
+                    }
+                });
+            }).then((data: Buffer) => { this._certificate = '' + data }).catch(reject);
+
+            Q.all([keyPromise, certPromise]).then(() => { resolve(this); });
         });
     }
 
-    generate(commonName: string, subjectAltName: string, verbose?: boolean) {
+    sign(commonName: string, subjectAltName: string, verbose?: boolean) {
         return Q.Promise((resolve, reject) => {
 
             var req = childProcess.spawn('openssl',
                 [
-                    'req',
-                    '-new',
-                    '-sha256',
+                    'req', '-new', '-sha256',
                     '-subj', util.format('/C=%s/ST=%s/O=%s/CN=%s',
                         this.countryName,
                         this.stateOrProvinceName,
                         this.organizationName,
                         commonName),
                     '-key', this.keyFileName
-                ], {
-                    cwd: 'keys',
-                    stdio: verbose ? [null, null, process.stderr] : null
-                });
+                ], { cwd: 'keys', stdio: verbose ? [null, null, process.stderr] : null });
 
             req.on('close', (code) => {
                 if (code != 0) {
-                    reject(new Error('Generating request process exited with code ' + code));
+                    reject(
+                        new Error('Generating request process exited with code ' + code));
                 }
             });
 
             var sign = childProcess.spawn('openssl',
                 [
-                    'x509',
-                    '-req',
-                    '-extfile', 'openssl.cnf',
-                    '-CA', this.caCertFileName,
-                    '-CAkey', this.keyFileName,
-                    '-CAcreateserial'
+                    'x509', '-req', '-extfile', 'openssl.cnf', '-CAcreateserial',
+                    '-CA', this.caCertFileName, '-CAkey', this.keyFileName
                 ], {
                     cwd: 'keys',
-                    env: {
-                        RANDFILE: '.rnd',
-                        SAN: subjectAltName
-                    },
+                    env: { RANDFILE: '.rnd', SAN: subjectAltName },
                     stdio: verbose ? [null, null, process.stderr] : null
                 });
 
             req.stdout.pipe(sign.stdin);
 
             var certificate = '';
-            sign.stdout.on('data', (data) => {
-                certificate += data;
-            });
+            sign.stdout.on('data', (data) => { certificate += data; });
 
             sign.on('close', (code) => {
                 if (code == 0) {
