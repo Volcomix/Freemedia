@@ -32,17 +32,6 @@ gulp.task('develop', ['build', 'watch'], function () {
 	});
 });
 
-gulp.task('cert:init', ['build'], function () {
-	var Cert = require('./build/Cert');
-	return Cert.init().then(function () {
-		return Cert.generate('*.duckduckgo.com', 'DNS: duckduckgo.com');
-	}).then(function (certificate) {
-		console.log(certificate);
-	}).fail(function (error) {
-		console.error(error);
-	});
-});
-
 gulp.task('test', ['build:test'], function () {
 	return gulp.src('build/test/**/*.js')
 		.pipe(mocha());
