@@ -55,7 +55,7 @@ describe('CertificateAuthority', function() {
 				return Q.nfcall<Buffer>(fs.readFile, 'keys/Test-CA-cert.srl').then(
 					function(data) {
 						serial = '' + data;
-						serial.should.be.a('string').of.length.above(0);
+						serial.should.be.a('string').with.length.above(0);
 					});
 			});
 		});
@@ -69,7 +69,7 @@ describe('CertificateAuthority', function() {
 			it('should generate a new CA serial number', function() {
 				return Q.nfcall<Buffer>(fs.readFile, 'keys/Test-CA-cert.srl').then(
 					function(data) {
-						('' + data).should.not.be.equal(serial);
+						('' + data).should.be.a('string').not.equal(serial);
 					});
 			});
 		});
