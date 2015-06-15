@@ -63,54 +63,52 @@ class CertificateAuthority {
     }
 
     private init(verbose?: boolean) {
-        return Q.Promise<CertificateAuthority>((resolve, reject) => {
 
-            var req = childProcess.spawn('openssl',
-                [
-                    'req', '-newkey', 'rsa:2048', '-sha256',
-                    '-subj', util.format('/C=%s/ST=%s/O=%s/CN=%s',
-                        this.countryName,
-                        this.stateOrProvinceName,
-                        this.organizationName,
-                        this.commonName),
-                    '-nodes', '-keyout', this.keyFileName
-                ], { cwd: 'keys', stdio: verbose ? [null, null, process.stderr] : null });
+        var req = childProcess.spawn('openssl',
+            [
+                'req', '-newkey', 'rsa:2048', '-sha256',
+                '-subj', util.format('/C=%s/ST=%s/O=%s/CN=%s',
+                    this.countryName,
+                    this.stateOrProvinceName,
+                    this.organizationName,
+                    this.commonName),
+                '-nodes', '-keyout', this.keyFileName
+            ], { cwd: 'keys', stdio: verbose ? [null, null, process.stderr] : null });
 
-            var keyPromise = Q.Promise((resolve, reject) => {
-                req.on('close', (code) => {
-                    if (code == 0) {
-                        Q.nfcall(fs.readFile, 'keys/' + this.keyFileName)
-                            .then(resolve).catch(reject);
-                    } else {
-                        reject(new Error(
-                            'Generating CA request process exited with code ' + code));
-                    }
-                });
-            }).then((data: Buffer) => { this._privateKey = '' + data; }).catch(reject);
+        var keyPromise = Q.Promise<Buffer>((resolve, reject) => {
+            req.on('close', (code) => {
+                if (code == 0) {
+                    Q.nfcall(fs.readFile, 'keys/' + this.keyFileName)
+                        .then(resolve).catch(reject);
+                } else {
+                    reject(
+                        new Error('Generating CA request process exited with code ' + code));
+                }
+            });
+        }).then((data) => { this._privateKey = '' + data; });
 
-            var sign = childProcess.spawn('openssl',
-                [
-                    'x509', '-req', '-signkey', this.keyFileName, '-out', this.caCertFileName
-                ], {
-                    cwd: 'keys',
-                    stdio: verbose ? [null, process.stdout, process.stderr] : null
-                });
+        var sign = childProcess.spawn('openssl',
+            [
+                'x509', '-req', '-signkey', this.keyFileName, '-out', this.caCertFileName
+            ], {
+                cwd: 'keys',
+                stdio: verbose ? [null, process.stdout, process.stderr] : null
+            });
 
-            req.stdout.pipe(sign.stdin);
+        req.stdout.pipe(sign.stdin);
 
-            var certPromise = Q.Promise((resolve, reject) => {
-                sign.on('close', (code) => {
-                    if (code == 0) {
-                        Q.nfcall(fs.readFile, 'keys/' + this.caCertFileName)
-                            .then(resolve).catch(reject);
-                    } else {
-                        reject(new Error('CA signing process exited with code ' + code));
-                    }
-                });
-            }).then((data: Buffer) => { this._certificate = '' + data }).catch(reject);
+        var certPromise = Q.Promise<Buffer>((resolve, reject) => {
+            sign.on('close', (code) => {
+                if (code == 0) {
+                    Q.nfcall(fs.readFile, 'keys/' + this.caCertFileName)
+                        .then(resolve).catch(reject);
+                } else {
+                    reject(new Error('CA signing process exited with code ' + code));
+                }
+            });
+        }).then((data) => { this._certificate = '' + data });
 
-            Q.all([keyPromise, certPromise]).then(() => { resolve(this); });
-        });
+        return Q.all([keyPromise, certPromise]).then(() => { return this; });
     }
 
     sign(commonName: string, subjectAltName: string, verbose?: boolean) {
