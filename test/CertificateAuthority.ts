@@ -39,6 +39,7 @@ describe('CertificateAuthority', function() {
 				// No problem, random state file does not exist
 			});
 		});
+		var serial: string;
 		context('when 1st certificate', function() {
 			it('should return certificate', function() {
 				return ca.sign('*.test1.com', 'DNS: test1.com').then(function(certificate) {
@@ -51,7 +52,11 @@ describe('CertificateAuthority', function() {
 				return Q.nfcall(fs.stat, 'keys/.rnd');
 			});
 			it('should create CA serial number file', function() {
-				return Q.nfcall(fs.stat, 'keys/Test-CA-cert.srl');
+				return Q.nfcall<Buffer>(fs.readFile, 'keys/Test-CA-cert.srl').then(
+					function(data) {
+						serial = '' + data;
+						serial.should.be.a('string').of.length.above(0);
+					});
 			});
 		});
 		context('when 2nd certificate', function() {
@@ -61,7 +66,12 @@ describe('CertificateAuthority', function() {
 					certificate.indexOf('-----END CERTIFICATE-----').should.be.greaterThan(0);
 				});
 			});
-			it('should increment CA serial number');
+			it('should generate a new CA serial number', function() {
+				return Q.nfcall<Buffer>(fs.readFile, 'keys/Test-CA-cert.srl').then(
+					function(data) {
+						('' + data).should.not.be.equal(serial);
+					});
+			});
 		});
 		it('should delete openssl.cnf before 1st certificate');
 		it('should not need subjectAltName parameter');
