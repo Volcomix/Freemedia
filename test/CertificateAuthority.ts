@@ -14,7 +14,7 @@ describe('CertificateAuthority', function() {
 	describe('#createCA()', function() {
 		it('should return CertificateAuthority', function() {
 			return CA.createCA('FR', 'Some-State', 'Test', 'Test').then(function(value) {
-				value.should.be.instanceof(CA);
+				value.should.be.an.instanceof(CA);
 				ca = value;
 			});
 		});
@@ -33,17 +33,19 @@ describe('CertificateAuthority', function() {
 			ca.certificate.indexOf('-----END CERTIFICATE-----').should.be.greaterThan(0);
 		});
 	});
-	describe('#generate()', function() {
+	describe('#sign()', function() {
 		before(function() {
 			return Q.nfcall(fs.unlink, 'keys/.rnd').catch(function() {
 				// No problem, random state file does not exist
 			});
 		});
 		context('when 1st certificate', function() {
-			before(function() {
-				return ca.sign('*.test.com', 'DNS: test.com');
+			it('should return certificate', function() {
+				return ca.sign('*.test1.com', 'DNS: test1.com').then(function(certificate) {
+					certificate.indexOf('-----BEGIN CERTIFICATE-----').should.be.equal(0);
+					certificate.indexOf('-----END CERTIFICATE-----').should.be.greaterThan(0);
+				});
 			});
-			it('should return certificate');
 			it('should create OpenSSL config file if not exists');
 			it('should write random state', function() {
 				return Q.nfcall(fs.stat, 'keys/.rnd');
@@ -53,8 +55,13 @@ describe('CertificateAuthority', function() {
 			});
 		});
 		context('when 2nd certificate', function() {
+			it('should return certificate', function() {
+				return ca.sign('*.test2.com', 'DNS: test2.com').then(function(certificate) {
+					certificate.indexOf('-----BEGIN CERTIFICATE-----').should.be.equal(0);
+					certificate.indexOf('-----END CERTIFICATE-----').should.be.greaterThan(0);
+				});
+			});
 			it('should increment CA serial number');
-			it('should return certificate');
 		});
 		it('should delete openssl.cnf before 1st certificate');
 		it('should not need subjectAltName parameter');

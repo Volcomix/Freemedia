@@ -112,41 +112,40 @@ class CertificateAuthority {
     }
 
     sign(commonName: string, subjectAltName: string, verbose?: boolean) {
-        return Q.Promise((resolve, reject) => {
 
-            var req = childProcess.spawn('openssl',
-                [
-                    'req', '-new', '-sha256',
-                    '-subj', util.format('/C=%s/ST=%s/O=%s/CN=%s',
-                        this.countryName,
-                        this.stateOrProvinceName,
-                        this.organizationName,
-                        commonName),
-                    '-key', this.keyFileName
-                ], { cwd: 'keys', stdio: verbose ? [null, null, process.stderr] : null });
+        var req = childProcess.spawn('openssl',
+            [
+                'req', '-new', '-sha256',
+                '-subj', util.format('/C=%s/ST=%s/O=%s/CN=%s',
+                    this.countryName,
+                    this.stateOrProvinceName,
+                    this.organizationName,
+                    commonName),
+                '-key', this.keyFileName
+            ], { cwd: 'keys', stdio: verbose ? [null, null, process.stderr] : null });
 
-            req.on('close', (code) => {
-                if (code != 0) {
-                    reject(
-                        new Error('Generating request process exited with code ' + code));
-                }
+        req.on('close', (code) => {
+            if (code != 0) {
+                throw new Error('Generating request process exited with code ' + code);
+            }
+        });
+
+        var sign = childProcess.spawn('openssl',
+            [
+                'x509', '-req', '-extfile', 'openssl.cnf', '-CAcreateserial',
+                '-CA', this.caCertFileName, '-CAkey', this.keyFileName
+            ], {
+                cwd: 'keys',
+                env: { RANDFILE: '.rnd', SAN: subjectAltName },
+                stdio: verbose ? [null, null, process.stderr] : null
             });
 
-            var sign = childProcess.spawn('openssl',
-                [
-                    'x509', '-req', '-extfile', 'openssl.cnf', '-CAcreateserial',
-                    '-CA', this.caCertFileName, '-CAkey', this.keyFileName
-                ], {
-                    cwd: 'keys',
-                    env: { RANDFILE: '.rnd', SAN: subjectAltName },
-                    stdio: verbose ? [null, null, process.stderr] : null
-                });
+        req.stdout.pipe(sign.stdin);
 
-            req.stdout.pipe(sign.stdin);
+        var certificate = '';
+        sign.stdout.on('data', (data) => { certificate += data; });
 
-            var certificate = '';
-            sign.stdout.on('data', (data) => { certificate += data; });
-
+        return Q.Promise<string>((resolve, reject) => {
             sign.on('close', (code) => {
                 if (code == 0) {
                     resolve(certificate);
