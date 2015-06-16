@@ -46,7 +46,7 @@ class CertificateAuthority {
      * commonName: Common Name (e.g. server FQDN or YOUR name)
      * verbose: Redirect print OpenSSL stdout and stderr
      */
-    static createCA(
+    static create(
         countryName: string,
         stateOrProvinceName: string,
         organizationName: string,

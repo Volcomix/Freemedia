@@ -11,8 +11,9 @@ import url = require('url');
 
 import express = require('express');
 import httpProxy = require('http-proxy');
+import Q = require('q');
 
-import Cert = require('./Cert');
+import CA = require('./CertificateAuthority');
 
 var proxy = httpProxy.createProxyServer({});
 
@@ -39,76 +40,91 @@ app.use(function(req, res) {
     proxy.web(req, res, options);
 });
 
-var proxyServer = http.createServer(app);
+CA.create('FR', 'Some-State', 'Freemedia', 'Freemedia').then((ca) => {
+    var options = { key: ca.privateKey, cert: ca.certificate };
 
-var options = {
-    key: fs.readFileSync('keys/freemedia-key.pem'),
-    cert: fs.readFileSync('keys/freemedia-cert.pem')
-};
-var mitmServer = https.createServer(options, app);
+    var mitmServer = https.createServer(options, app);
 
-mitmServer.on('connect', function(
-    req: http.IncomingMessage,
-    cltSocket: net.Socket,
-    head: { [key: string]: string; }) {
+    mitmServer.on('connect', (
+        req: http.IncomingMessage,
+        cltSocket: net.Socket,
+        head: { [key: string]: string; }) => {
 
-    console.log('MITM receive connect: ' + req.url);
-});
+        console.log('MITM receive connect: ' + req.url);
+    });
 
-mitmServer.listen(3129, function() {
-    var host = mitmServer.address().address;
-    var port = mitmServer.address().port;
+    mitmServer.listen(3129, () => {
+        var host = mitmServer.address().address;
+        var port = mitmServer.address().port;
 
-    console.log('Internal MITM server listening at https://%s:%s', host, port);
-});
+        console.log('Internal MITM server listening at https://%s:%s', host, port);
+    });
 
-proxyServer.on('connect', function(
-    req: http.IncomingMessage,
-    cltSocket: net.Socket,
-    head: { [key: string]: string; }) {
+    var sni = [];
 
-    console.log('Getting peer certificate: ' + req.url);
+    var proxyServer = http.createServer(app);
 
-    var srvUrl = url.parse('https://' + req.url);
-    var srvSocket = tls.connect(parseInt(srvUrl.port), srvUrl.hostname, undefined,
-        function() {
-            var peerCertificate = srvSocket.getPeerCertificate();
+    proxyServer.on('connect', (
+        req: http.IncomingMessage,
+        cltSocket: net.Socket,
+        head: { [key: string]: string; }) => {
 
-            Cert.generate(peerCertificate.subject.CN, peerCertificate.subjectaltname)
-                .then(function(certificate) {
+        Q.Promise((resolve, reject) => {
 
-                mitmServer.addContext(srvUrl.hostname, {
-                    key: '' + fs.readFileSync('keys/freemedia-key.pem'),
-                    cert: '' + certificate,
-                    ca: '' + fs.readFileSync('keys/freemedia-cert.pem')
-                });
+            var srvUrl = url.parse('https://' + req.url);
 
-                console.log('Piping to MITM server: ' + req.url);
+            if (sni.indexOf(srvUrl.hostname) > -1) {
+                return resolve({});
+            }
 
-                var mitmSocket = net.connect(
-                    mitmServer.address().port,
-                    mitmServer.address().address,
-                    function() {
-                        cltSocket.write(
-                            'HTTP/1.1 200 Connection Established\r\n' +
-                            '\r\n');
-                        mitmSocket.write(head);
-                        mitmSocket.pipe(cltSocket);
-                        cltSocket.pipe(mitmSocket);
+            console.log('Getting peer certificate: ' + req.url);
+
+            var srvSocket = tls.connect(parseInt(srvUrl.port), srvUrl.hostname, undefined,
+                () => {
+
+                    var peerCertificate = srvSocket.getPeerCertificate();
+
+                    ca.sign(peerCertificate.subject.CN, peerCertificate.subjectaltname)
+                        .then((certificate) => {
+
+                        mitmServer.addContext(srvUrl.hostname, {
+                            key: ca.privateKey,
+                            cert: certificate,
+                            ca: ca.certificate
+                        });
+
+                        sni.push(srvUrl.hostname);
+
+                        resolve({});
                     });
-
-                mitmSocket.on('error', function(err) {
-                    console.error(err);
                 });
+        }).then(() => {
+            console.log('Piping to MITM server: ' + req.url);
+
+            var mitmSocket = net.connect(
+                mitmServer.address().port,
+                mitmServer.address().address,
+                () => {
+                    cltSocket.write(
+                        'HTTP/1.1 200 Connection Established\r\n' +
+                        '\r\n');
+                    mitmSocket.write(head);
+                    mitmSocket.pipe(cltSocket);
+                    cltSocket.pipe(mitmSocket);
+                });
+
+            mitmSocket.on('error', (err) => {
+                console.error(err);
             });
         });
-});
+    });
 
-proxyServer.listen(3128, function() {
+    proxyServer.listen(3128, () => {
 
-    var host = proxyServer.address().address;
-    var port = proxyServer.address().port;
+        var host = proxyServer.address().address;
+        var port = proxyServer.address().port;
 
-    console.log('Proxy listening at http://%s:%s', host, port);
+        console.log('Proxy listening at http://%s:%s', host, port);
 
+    });
 });

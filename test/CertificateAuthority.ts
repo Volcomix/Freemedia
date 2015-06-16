@@ -11,9 +11,9 @@ import CA = require('../src/CertificateAuthority');
 
 describe('CertificateAuthority', function() {
 	var ca: CA;
-	describe('#createCA()', function() {
+	describe('#create()', function() {
 		it('should return CertificateAuthority', function() {
-			return CA.createCA('FR', 'Some-State', 'Test', 'Test').then(function(value) {
+			return CA.create('FR', 'Some-State', 'Test', 'Test').then(function(value) {
 				value.should.be.an.instanceof(CA);
 				ca = value;
 			});
@@ -32,6 +32,7 @@ describe('CertificateAuthority', function() {
 			ca.certificate.indexOf('-----BEGIN CERTIFICATE-----').should.be.equal(0);
 			ca.certificate.indexOf('-----END CERTIFICATE-----').should.be.greaterThan(0);
 		});
+		it('should not override existing CA and load it');
 	});
 	describe('#sign()', function() {
 		before(function() {
