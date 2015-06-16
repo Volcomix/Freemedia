@@ -35,7 +35,7 @@ describe('CertificateAuthority', function() {
 	});
 	describe('#sign()', function() {
 		before(function() {
-			return Q.nfcall(fs.unlink, 'keys/.rnd').catch(function() {
+			return Q.nfcall(fs.unlink, 'ssl/.rnd').catch(function() {
 				// No problem, random state file does not exist
 			});
 		});
@@ -47,9 +47,8 @@ describe('CertificateAuthority', function() {
 					certificate.indexOf('-----END CERTIFICATE-----').should.be.greaterThan(0);
 				});
 			});
-			it('should create OpenSSL config file if not exists');
 			it('should write random state', function() {
-				return Q.nfcall(fs.stat, 'keys/.rnd');
+				return Q.nfcall(fs.stat, 'ssl/.rnd');
 			});
 			it('should create CA serial number file', function() {
 				return Q.nfcall<Buffer>(fs.readFile, 'keys/Test-CA-cert.srl').then(
@@ -69,13 +68,28 @@ describe('CertificateAuthority', function() {
 			it('should generate a new CA serial number', function() {
 				return Q.nfcall<Buffer>(fs.readFile, 'keys/Test-CA-cert.srl').then(
 					function(data) {
-						('' + data).should.be.a('string').not.equal(serial);
+						var newSerial = '' + data;
+						newSerial.should.be.a('string').not.equal(serial);
+						serial = newSerial;
 					});
 			});
 		});
-		it('should delete openssl.cnf before 1st certificate');
-		it('should not need subjectAltName parameter');
-		it('should have subfolder to store certificates');
+		context('when no subject alt name specified', function() {
+			it('should return certificate', function() {
+				return ca.sign('*.test3.com').then(function(certificate) {
+					certificate.indexOf('-----BEGIN CERTIFICATE-----').should.be.equal(0);
+					certificate.indexOf('-----END CERTIFICATE-----').should.be.greaterThan(0);
+				});
+			});
+			it('should generate a new CA serial number', function() {
+				return Q.nfcall<Buffer>(fs.readFile, 'keys/Test-CA-cert.srl').then(
+					function(data) {
+						var newSerial = '' + data;
+						newSerial.should.be.a('string').not.equal(serial);
+					});
+			});
+		});
+		it('should store certificates into subfolders');
 	});
 	after(function() {
 		return Q.nfcall(fs.unlink, 'keys/Test-key.pem').finally(function() {

@@ -111,7 +111,7 @@ class CertificateAuthority {
         return Q.all([keyPromise, certPromise]).then(() => { return this; });
     }
 
-    sign(commonName: string, subjectAltName: string, verbose?: boolean) {
+    sign(commonName: string, subjectAltName?: string, verbose?: boolean) {
 
         var req = childProcess.spawn('openssl',
             [
@@ -130,15 +130,20 @@ class CertificateAuthority {
             }
         });
 
-        var sign = childProcess.spawn('openssl',
-            [
-                'x509', '-req', '-extfile', 'openssl.cnf', '-CAcreateserial',
-                '-CA', this.caCertFileName, '-CAkey', this.keyFileName
-            ], {
-                cwd: 'keys',
-                env: { RANDFILE: '.rnd', SAN: subjectAltName },
-                stdio: verbose ? [null, null, process.stderr] : null
-            });
+        var args = [
+            'x509', '-req', '-CAcreateserial',
+            '-CA', 'keys/' + this.caCertFileName,
+            '-CAkey', 'keys/' + this.keyFileName
+        ];
+
+        if (subjectAltName) {
+            args.push('-extfile', 'ssl/openssl.cnf');
+        }
+
+        var sign = childProcess.spawn('openssl', args, {
+            env: { RANDFILE: 'ssl/.rnd', SAN: subjectAltName },
+            stdio: verbose ? [null, null, process.stderr] : null
+        });
 
         req.stdout.pipe(sign.stdin);
 
