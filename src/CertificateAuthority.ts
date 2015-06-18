@@ -9,22 +9,20 @@ import Q = require('q');
 
 class CertificateAuthority {
 
+    private static configFile = 'ssl/openssl.cnf';
+    private static randFile = 'ssl/.rnd';
+
     private countryName: string;
     private stateOrProvinceName: string;
     private organizationName: string;
-    private keyFileName: string;
-    private caCertFileName: string;
-
-    private _commonName: string;
-
-    private get commonName() {
-        return this._commonName;
+    private commonName: string;
+    
+    private get keyFile() {
+        return 'keys/' + this.commonName + '-key.pem';
     }
-
-    private set commonName(value: string) {
-        this._commonName = value;
-        this.keyFileName = value + '-key.pem';
-        this.caCertFileName = value + '-CA-cert.pem';
+    
+    private get caCertFile() {
+        return 'keys/' + this.commonName + '-CA-cert.pem';
     }
 
     private _privateKey: string;
@@ -63,6 +61,11 @@ class CertificateAuthority {
     }
 
     private init(verbose?: boolean) {
+        
+        Q.all([
+            Q.nfcall(fs.stat, this.keyFile),
+            Q.nfcall(fs.stat, this.caCertFile)
+        ])
 
         var req = childProcess.spawn('openssl',
             [
@@ -72,14 +75,13 @@ class CertificateAuthority {
                     this.stateOrProvinceName,
                     this.organizationName,
                     this.commonName),
-                '-nodes', '-keyout', this.keyFileName
-            ], { cwd: 'keys', stdio: verbose ? [null, null, process.stderr] : null });
+                '-nodes', '-keyout', this.keyFile
+            ], { stdio: verbose ? [null, null, process.stderr] : null });
 
         var keyPromise = Q.Promise<Buffer>((resolve, reject) => {
             req.on('close', (code) => {
                 if (code == 0) {
-                    Q.nfcall(fs.readFile, 'keys/' + this.keyFileName)
-                        .then(resolve).catch(reject);
+                    Q.nfcall(fs.readFile, this.keyFile).then(resolve).catch(reject);
                 } else {
                     reject(
                         new Error('Generating CA request process exited with code ' + code));
@@ -88,20 +90,15 @@ class CertificateAuthority {
         }).then((data) => { this._privateKey = '' + data; });
 
         var sign = childProcess.spawn('openssl',
-            [
-                'x509', '-req', '-signkey', this.keyFileName, '-out', this.caCertFileName
-            ], {
-                cwd: 'keys',
-                stdio: verbose ? [null, process.stdout, process.stderr] : null
-            });
+            [ 'x509', '-req', '-signkey', this.keyFile, '-out', this.caCertFile ],
+            { stdio: verbose ? [null, process.stdout, process.stderr] : null });
 
         req.stdout.pipe(sign.stdin);
 
         var certPromise = Q.Promise<Buffer>((resolve, reject) => {
             sign.on('close', (code) => {
                 if (code == 0) {
-                    Q.nfcall(fs.readFile, 'keys/' + this.caCertFileName)
-                        .then(resolve).catch(reject);
+                    Q.nfcall(fs.readFile, this.caCertFile).then(resolve).catch(reject);
                 } else {
                     reject(new Error('CA signing process exited with code ' + code));
                 }
@@ -121,8 +118,8 @@ class CertificateAuthority {
                     this.stateOrProvinceName,
                     this.organizationName,
                     commonName),
-                '-key', this.keyFileName
-            ], { cwd: 'keys', stdio: verbose ? [null, null, process.stderr] : null });
+                '-key', this.keyFile
+            ], { stdio: verbose ? [null, null, process.stderr] : null });
 
         req.on('close', (code) => {
             if (code != 0) {
@@ -132,16 +129,16 @@ class CertificateAuthority {
 
         var args = [
             'x509', '-req', '-CAcreateserial',
-            '-CA', 'keys/' + this.caCertFileName,
-            '-CAkey', 'keys/' + this.keyFileName
+            '-CA', this.caCertFile,
+            '-CAkey', this.keyFile
         ];
 
         if (subjectAltName) {
-            args.push('-extfile', 'ssl/openssl.cnf');
+            args.push('-extfile', CertificateAuthority.configFile);
         }
 
         var sign = childProcess.spawn('openssl', args, {
-            env: { RANDFILE: 'ssl/.rnd', SAN: subjectAltName },
+            env: { RANDFILE: CertificateAuthority.randFile, SAN: subjectAltName },
             stdio: verbose ? [null, null, process.stderr] : null
         });
 
