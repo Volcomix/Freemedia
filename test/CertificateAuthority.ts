@@ -12,27 +12,36 @@ import CA = require('../src/CertificateAuthority');
 describe('CertificateAuthority', function() {
 	var ca: CA;
 	describe('#create()', function() {
-		it('should return CertificateAuthority', function() {
-			return CA.create('FR', 'Some-State', 'Test', 'Test').then(function(value) {
-				value.should.be.an.instanceof(CA);
-				ca = value;
+		context('when 1st CA', function() {
+			it('should return CertificateAuthority', function() {
+				return CA.create('FR', 'Some-State', 'Test', 'Test').then(function(newCa) {
+					newCa.should.be.an.instanceof(CA);
+					ca = newCa;
+				});
+			});
+			it('should create private key file', function() {
+				return Q.nfcall(fs.stat, 'keys/Test-key.pem');
+			});
+			it('should create CA certificate file', function() {
+				return Q.nfcall(fs.stat, 'keys/Test-CA-cert.pem');
+			});
+			it('should have private key', function() {
+				ca.privateKey.indexOf('-----BEGIN PRIVATE KEY-----').should.be.equal(0);
+				ca.privateKey.indexOf('-----END PRIVATE KEY-----').should.be.greaterThan(0);
+			});
+			it('should have CA certificate', function() {
+				ca.certificate.indexOf('-----BEGIN CERTIFICATE-----').should.be.equal(0);
+				ca.certificate.indexOf('-----END CERTIFICATE-----').should.be.greaterThan(0);
 			});
 		});
-		it('should create private key file', function() {
-			return Q.nfcall(fs.stat, 'keys/Test-key.pem');
+		context('when 2nd CA from same common name', function() {
+			it('should load existing CertificateAuthority', function() {
+				return CA.create('FR', 'Some-State', 'Test', 'Test').then(function(newCa) {
+					newCa.privateKey.should.be.equal(ca.privateKey);
+					newCa.certificate.should.be.equal(ca.certificate);
+				});
+			});
 		});
-		it('should create CA certificate file', function() {
-			return Q.nfcall(fs.stat, 'keys/Test-CA-cert.pem');
-		});
-		it('should have private key', function() {
-			ca.privateKey.indexOf('-----BEGIN PRIVATE KEY-----').should.be.equal(0);
-			ca.privateKey.indexOf('-----END PRIVATE KEY-----').should.be.greaterThan(0);
-		});
-		it('should have CA certificate', function() {
-			ca.certificate.indexOf('-----BEGIN CERTIFICATE-----').should.be.equal(0);
-			ca.certificate.indexOf('-----END CERTIFICATE-----').should.be.greaterThan(0);
-		});
-		it('should not override existing CA and load it');
 	});
 	describe('#sign()', function() {
 		before(function() {

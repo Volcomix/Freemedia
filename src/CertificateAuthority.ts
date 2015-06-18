@@ -16,11 +16,11 @@ class CertificateAuthority {
     private stateOrProvinceName: string;
     private organizationName: string;
     private commonName: string;
-    
+
     private get keyFile() {
         return 'keys/' + this.commonName + '-key.pem';
     }
-    
+
     private get caCertFile() {
         return 'keys/' + this.commonName + '-CA-cert.pem';
     }
@@ -62,45 +62,55 @@ class CertificateAuthority {
 
     private init(verbose?: boolean) {
 
-        var req = childProcess.spawn('openssl',
-            [
-                'req', '-newkey', 'rsa:2048', '-sha256',
-                '-subj', util.format('/C=%s/ST=%s/O=%s/CN=%s',
-                    this.countryName,
-                    this.stateOrProvinceName,
-                    this.organizationName,
-                    this.commonName),
-                '-nodes', '-keyout', this.keyFile
-            ], { stdio: verbose ? [null, null, process.stderr] : null });
+        return Q.all([
+            Q.nfcall(fs.stat, this.keyFile),
+            Q.nfcall(fs.stat, this.caCertFile)
+        ]).catch(() => {
 
-        var keyPromise = Q.Promise<Buffer>((resolve, reject) => {
+            var req = childProcess.spawn('openssl',
+                [
+                    'req', '-newkey', 'rsa:2048', '-sha256',
+                    '-subj', util.format('/C=%s/ST=%s/O=%s/CN=%s',
+                        this.countryName,
+                        this.stateOrProvinceName,
+                        this.organizationName,
+                        this.commonName),
+                    '-nodes', '-keyout', this.keyFile
+                ], { stdio: verbose ? [null, null, process.stderr] : null });
+
+            var sign = childProcess.spawn('openssl',
+                ['x509', '-req', '-signkey', this.keyFile, '-out', this.caCertFile],
+                { stdio: verbose ? [null, process.stdout, process.stderr] : null });
+
+            req.stdout.pipe(sign.stdin);
+
             req.on('close', (code) => {
-                if (code == 0) {
-                    Q.nfcall(fs.readFile, this.keyFile).then(resolve).catch(reject);
-                } else {
-                    reject(
-                        new Error('Generating CA request process exited with code ' + code));
+                if (code != 0) {
+                    throw new Error('Generating CA request process exited with code ' + code);
                 }
             });
-        }).then((data) => { this._privateKey = '' + data; });
 
-        var sign = childProcess.spawn('openssl',
-            [ 'x509', '-req', '-signkey', this.keyFile, '-out', this.caCertFile ],
-            { stdio: verbose ? [null, process.stdout, process.stderr] : null });
-
-        req.stdout.pipe(sign.stdin);
-
-        var certPromise = Q.Promise<Buffer>((resolve, reject) => {
-            sign.on('close', (code) => {
-                if (code == 0) {
-                    Q.nfcall(fs.readFile, this.caCertFile).then(resolve).catch(reject);
-                } else {
-                    reject(new Error('CA signing process exited with code ' + code));
-                }
+            return Q.Promise((resolve, reject) => {
+                sign.on('close', (code) => {
+                    if (code == 0) {
+                        resolve(code);
+                    } else {
+                        throw new Error('CA signing process exited with code ' + code);
+                    }
+                });
             });
-        }).then((data) => { this._certificate = '' + data });
 
-        return Q.all([keyPromise, certPromise]).then(() => { return this; });
+        }).then(() => {
+            return [
+                Q.nfcall(fs.readFile, this.keyFile),
+                Q.nfcall(fs.readFile, this.caCertFile)
+            ];
+        }).spread<CertificateAuthority>((privateKey, certificate) => {
+            this._privateKey = '' + privateKey;
+            this._certificate = '' + certificate;
+            return this;
+        });
+
     }
 
     sign(commonName: string, subjectAltName?: string, verbose?: boolean) {
@@ -115,12 +125,6 @@ class CertificateAuthority {
                     commonName),
                 '-key', this.keyFile
             ], { stdio: verbose ? [null, null, process.stderr] : null });
-
-        req.on('close', (code) => {
-            if (code != 0) {
-                throw new Error('Generating request process exited with code ' + code);
-            }
-        });
 
         var args = [
             'x509', '-req', '-CAcreateserial',
@@ -142,12 +146,18 @@ class CertificateAuthority {
         var certificate = '';
         sign.stdout.on('data', (data) => { certificate += data; });
 
+        req.on('close', (code) => {
+            if (code != 0) {
+                throw new Error('Generating request process exited with code ' + code);
+            }
+        });
+
         return Q.Promise<string>((resolve, reject) => {
             sign.on('close', (code) => {
                 if (code == 0) {
                     resolve(certificate);
                 } else {
-                    reject(new Error('Signing process exited with code ' + code));
+                    throw new Error('Signing process exited with code ' + code);
                 }
             });
         });
