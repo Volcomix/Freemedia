@@ -61,11 +61,6 @@ class CertificateAuthority {
     }
 
     private init(verbose?: boolean) {
-        
-        Q.all([
-            Q.nfcall(fs.stat, this.keyFile),
-            Q.nfcall(fs.stat, this.caCertFile)
-        ])
 
         var req = childProcess.spawn('openssl',
             [
