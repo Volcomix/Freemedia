@@ -50,28 +50,29 @@ CA.create('FR', 'Some-State', 'Freemedia', 'Freemedia').then((ca) => {
         cert: ca.certificate,
         SNICallback: (servername, cb) => {
             var domain = servername.split('.').slice(-2).join('.');
-            var commonName = '*.' + domain;
 
-            var context = sni[domain];
+            Q.Promise((resolve, reject) => {
+                var context = sni[domain];
 
-            if (context) {
-                cb(null, context);
-            } else {
-                console.log('Signing certificate: ' + commonName);
+                if (context) {
+                    resolve(context);
+                } else {
+                    var commonName = '*.' + domain;
 
-                ca.sign(commonName, util.format('DNS: %s, DNS: %s', commonName, domain))
-                    .then((certificate) => {
+                    console.log('Signing certificate: ' + commonName);
 
-                    return (<any>tls).createSecureContext({
-                        key: ca.privateKey,
-                        cert: certificate,
-                        ca: ca.certificate
-                    });
-                }).then((context) => {
-                    sni[domain] = context;
-                    cb(null, context);
-                });
-            }
+                    ca.sign(commonName, util.format('DNS: %s, DNS: %s', commonName, domain))
+                        .then((certificate) => {
+
+                        resolve(sni[domain] = (<any>tls).createSecureContext({
+                            key: ca.privateKey,
+                            cert: certificate,
+                            ca: ca.certificate
+                        }));
+
+                    })
+                }
+            }).then((context) => { cb(null, context); });
         }
     };
 
