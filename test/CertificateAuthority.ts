@@ -52,7 +52,7 @@ describe('CertificateAuthority', function() {
 		var serial: string;
 		context('when 1st certificate', function() {
 			it('should return certificate', function() {
-				return ca.sign('*.test1.com', 'DNS: test1.com').then(function(certificate) {
+				return ca.sign('*.test1.com', 'DNS: *.test1.com, DNS: test1.com').then(function(certificate) {
 					certificate.indexOf('-----BEGIN CERTIFICATE-----').should.be.equal(0);
 					certificate.indexOf('-----END CERTIFICATE-----').should.be.greaterThan(0);
 				});

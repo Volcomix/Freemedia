@@ -8,6 +8,7 @@ import tls = require('tls');
 import fs = require('fs');
 import net = require('net');
 import url = require('url');
+import util = require('util');
 
 import express = require('express');
 import httpProxy = require('http-proxy');
@@ -35,23 +36,46 @@ app.use(function(req, res) {
         target: reqUrl.protocol + '//' + reqUrl.host
     };
 
-    console.log(reqUrl.href);
+    //console.log(reqUrl.href);
 
     proxy.web(req, res, options);
 });
 
 CA.create('FR', 'Some-State', 'Freemedia', 'Freemedia').then((ca) => {
-    var options = { key: ca.privateKey, cert: ca.certificate };
+
+    var sni = [];
+
+    var options: any = {
+        key: ca.privateKey,
+        cert: ca.certificate,
+        SNICallback: (servername, cb) => {
+            var domain = servername.split('.').slice(-2).join('.');
+            var commonName = '*.' + domain;
+
+            var context = sni[domain];
+
+            if (context) {
+                cb(null, context);
+            } else {
+                console.log('Signing certificate: ' + commonName);
+
+                ca.sign(commonName, util.format('DNS: %s, DNS: %s', commonName, domain))
+                    .then((certificate) => {
+
+                    return (<any>tls).createSecureContext({
+                        key: ca.privateKey,
+                        cert: certificate,
+                        ca: ca.certificate
+                    });
+                }).then((context) => {
+                    sni[domain] = context;
+                    cb(null, context);
+                });
+            }
+        }
+    };
 
     var mitmServer = https.createServer(options, app);
-
-    mitmServer.on('connect', (
-        req: http.IncomingMessage,
-        cltSocket: net.Socket,
-        head: { [key: string]: string; }) => {
-
-        console.log('MITM receive connect: ' + req.url);
-    });
 
     mitmServer.listen(3129, () => {
         var host = mitmServer.address().address;
@@ -60,8 +84,6 @@ CA.create('FR', 'Some-State', 'Freemedia', 'Freemedia').then((ca) => {
         console.log('Internal MITM server listening at https://%s:%s', host, port);
     });
 
-    var sni = [];
-
     var proxyServer = http.createServer(app);
 
     proxyServer.on('connect', (
@@ -69,53 +91,22 @@ CA.create('FR', 'Some-State', 'Freemedia', 'Freemedia').then((ca) => {
         cltSocket: net.Socket,
         head: { [key: string]: string; }) => {
 
-        Q.Promise((resolve, reject) => {
+        //console.log('Piping to MITM server: ' + req.url);
 
-            var srvUrl = url.parse('https://' + req.url);
-
-            if (sni.indexOf(srvUrl.hostname) > -1) {
-                return resolve({});
-            }
-
-            console.log('Getting peer certificate: ' + req.url);
-
-            var srvSocket = tls.connect(parseInt(srvUrl.port), srvUrl.hostname, undefined,
-                () => {
-
-                    var peerCertificate = srvSocket.getPeerCertificate();
-
-                    ca.sign(peerCertificate.subject.CN, peerCertificate.subjectaltname)
-                        .then((certificate) => {
-
-                        mitmServer.addContext(srvUrl.hostname, {
-                            key: ca.privateKey,
-                            cert: certificate,
-                            ca: ca.certificate
-                        });
-
-                        sni.push(srvUrl.hostname);
-
-                        resolve({});
-                    });
-                });
-        }).then(() => {
-            console.log('Piping to MITM server: ' + req.url);
-
-            var mitmSocket = net.connect(
-                mitmServer.address().port,
-                mitmServer.address().address,
-                () => {
-                    cltSocket.write(
-                        'HTTP/1.1 200 Connection Established\r\n' +
-                        '\r\n');
-                    mitmSocket.write(head);
-                    mitmSocket.pipe(cltSocket);
-                    cltSocket.pipe(mitmSocket);
-                });
-
-            mitmSocket.on('error', (err) => {
-                console.error(err);
+        var mitmSocket = net.connect(
+            mitmServer.address().port,
+            mitmServer.address().address,
+            () => {
+                cltSocket.write(
+                    'HTTP/1.1 200 Connection Established\r\n' +
+                    '\r\n');
+                mitmSocket.write(head);
+                mitmSocket.pipe(cltSocket);
+                cltSocket.pipe(mitmSocket);
             });
+
+        mitmSocket.on('error', (err) => {
+            console.error(err);
         });
     });
 
