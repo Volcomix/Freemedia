@@ -1,6 +1,11 @@
+/// <reference path="../typings/node/node.d.ts"/>
+/// <reference path="../typings/q/Q.d.ts"/>
+
 import https = require('https');
 import tls = require('tls');
 import util = require('util');
+
+import Q = require('q');
 
 import CA = require('./CertificateAuthority');
 
@@ -14,7 +19,7 @@ class MitmServer {
     }
 
     constructor(
-        private requestListener?: Function,
+        private requestListener: Function,
         private ca = new CA('FR', 'Some-State', 'MitmServer', 'MitmServer')) {
     }
 

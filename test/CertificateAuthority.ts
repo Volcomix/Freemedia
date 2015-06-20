@@ -1,11 +1,12 @@
 /// <reference path="../typings/node/node.d.ts"/>
 /// <reference path="../typings/mocha/mocha.d.ts"/>
 /// <reference path="../typings/chai/chai.d.ts"/>
+/// <reference path="../typings/q/Q.d.ts"/>
 
 import fs = require('fs');
 
-import Q = require('q');
 require('chai').should();
+import Q = require('q');
 
 import CA = require('../src/CertificateAuthority');
 
@@ -137,6 +138,6 @@ describe('CertificateAuthority', function() {
 			return Q.nfcall(fs.unlink, 'keys/Test-CA-cert.pem');
 		}).finally(function() {
 			return Q.nfcall(fs.unlink, 'keys/Test-CA-cert.srl')
-		})
+		}).done();
 	});
 });

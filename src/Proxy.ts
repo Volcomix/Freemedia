@@ -15,6 +15,7 @@ import httpProxy = require('http-proxy');
 import Q = require('q');
 
 import CA = require('./CertificateAuthority');
+import MitmServer = require('./MitmServer');
 
 var proxy = httpProxy.createProxyServer({});
 
@@ -43,78 +44,42 @@ app.use(function(req, res) {
 
 var ca = new CA('FR', 'Some-State', 'Freemedia', 'Freemedia');
 
-ca.caCertificate.then((caCert) => {
+var mitmServer = new MitmServer(app, ca).listen(3129, () => {
+    var host = mitmServer.address.address;
+    var port = mitmServer.address.port;
 
-    var sni: tls.SecureContext[] = [];
+    console.log('Internal MITM server listening at https://%s:%s', host, port);
+});
 
-    var options: any = {
-        key: caCert.privateKey,
-        cert: caCert.certificate,
-        SNICallback: (servername, cb) => {
-            var domain = servername.split('.').slice(-2).join('.');
+var proxyServer = http.createServer(app).listen(3128, () => {
 
-            Q.Promise((resolve, reject) => {
-                var context = sni[domain];
+    var host = proxyServer.address().address;
+    var port = proxyServer.address().port;
 
-                if (context) {
-                    resolve(context);
-                } else {
-                    var commonName = '*.' + domain;
+    console.log('Proxy listening at http://%s:%s', host, port);
 
-                    console.log('Signing certificate: ' + commonName);
+});
 
-                    ca.sign(commonName, util.format('DNS: %s, DNS: %s', commonName, domain))
-                        .then((certificate) => {
+proxyServer.on('connect', (
+    req: http.IncomingMessage,
+    cltSocket: net.Socket,
+    head: { [key: string]: string; }) => {
 
-                        resolve(sni[domain] = tls.createSecureContext({
-                            key: caCert.privateKey,
-                            cert: certificate,
-                            ca: caCert.certificate
-                        }));
+    //console.log('Piping to MITM server: ' + req.url);
 
-                    })
-                }
-            }).then((context) => { cb(null, context); });
-        }
-    };
-
-    var mitmServer = https.createServer(options, app).listen(3129, () => {
-        var host = mitmServer.address().address;
-        var port = mitmServer.address().port;
-
-        console.log('Internal MITM server listening at https://%s:%s', host, port);
-    });
-
-    var proxyServer = http.createServer(app).listen(3128, () => {
-
-        var host = proxyServer.address().address;
-        var port = proxyServer.address().port;
-
-        console.log('Proxy listening at http://%s:%s', host, port);
-
-    });
-
-    proxyServer.on('connect', (
-        req: http.IncomingMessage,
-        cltSocket: net.Socket,
-        head: { [key: string]: string; }) => {
-
-        //console.log('Piping to MITM server: ' + req.url);
-
-        var mitmSocket = net.connect(
-            mitmServer.address().port,
-            mitmServer.address().address,
-            () => {
-                cltSocket.write(
-                    'HTTP/1.1 200 Connection Established\r\n' +
-                    '\r\n');
-                mitmSocket.write(head);
-                mitmSocket.pipe(cltSocket);
-                cltSocket.pipe(mitmSocket);
-            });
-
-        mitmSocket.on('error', (err) => {
-            console.error(err);
+    var mitmSocket = net.connect(
+        mitmServer.address.port,
+        mitmServer.address.address,
+        () => {
+            cltSocket.write(
+                'HTTP/1.1 200 Connection Established\r\n' +
+                '\r\n');
+            mitmSocket.write(head);
+            mitmSocket.pipe(cltSocket);
+            cltSocket.pipe(mitmSocket);
         });
+
+    mitmSocket.on('error', (err) => {
+        console.error(err);
     });
 });
