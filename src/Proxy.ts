@@ -76,16 +76,21 @@ CA.create('FR', 'Some-State', 'Freemedia', 'Freemedia').then((ca) => {
         }
     };
 
-    var mitmServer = https.createServer(options, app);
-
-    mitmServer.listen(3129, () => {
+    var mitmServer = https.createServer(options, app).listen(3129, () => {
         var host = mitmServer.address().address;
         var port = mitmServer.address().port;
 
         console.log('Internal MITM server listening at https://%s:%s', host, port);
     });
 
-    var proxyServer = http.createServer(app);
+    var proxyServer = http.createServer(app).listen(3128, () => {
+
+        var host = proxyServer.address().address;
+        var port = proxyServer.address().port;
+
+        console.log('Proxy listening at http://%s:%s', host, port);
+
+    });
 
     proxyServer.on('connect', (
         req: http.IncomingMessage,
@@ -109,14 +114,5 @@ CA.create('FR', 'Some-State', 'Freemedia', 'Freemedia').then((ca) => {
         mitmSocket.on('error', (err) => {
             console.error(err);
         });
-    });
-
-    proxyServer.listen(3128, () => {
-
-        var host = proxyServer.address().address;
-        var port = proxyServer.address().port;
-
-        console.log('Proxy listening at http://%s:%s', host, port);
-
     });
 });
