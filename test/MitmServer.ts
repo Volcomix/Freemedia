@@ -13,11 +13,11 @@ describe('MitmServer', function() {
 
 	describe('#listen()', function() {
 		it('should start', function(done) {
-			mitmServer = new MitmServer().listen(3128, done);
+			mitmServer = new MitmServer().listen(13129, done);
 		});
 		it('should be listening', function(done) {
-			mitmServer.address.port.should.be.equal(3128);
-			var client = net.connect(3128, 'localhost', function() {
+			mitmServer.address.port.should.be.equal(13129);
+			var client = net.connect(13129, 'localhost', function() {
 				client.end();
 			});
 			client.on('error', done);
@@ -25,7 +25,6 @@ describe('MitmServer', function() {
 		});
 	});
 	context('when started', function() {
-		it('should proxy HTTP requests');
 		it('should proxy HTTPS requests with SNI');
 		it('should proxy HTTPS requests without SNI');
 	});
@@ -34,9 +33,9 @@ describe('MitmServer', function() {
 			mitmServer.close().on('close', done);
 		});
 		it('should not be listening anymore', function(done) {
-			var client = net.connect(3128, 'localhost', function() {
+			var client = net.connect(13129, 'localhost', function() {
 				client.end();
-				done(new Error('MitmServer is still listening on port 3128'));
+				done(new Error('MitmServer is still listening on port 13129'));
 			});
 			client.on('error', function() { done(); });
 		});
