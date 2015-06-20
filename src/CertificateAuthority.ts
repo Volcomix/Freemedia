@@ -41,7 +41,7 @@ class CertificateAuthority {
         private stateOrProvinceName: string,
         private organizationName: string,
         private commonName: string,
-        verbose?: boolean) {
+        private verbose?: boolean) {
 
         this._caCertificate = Q.nfcall(mkdirp, CertificateAuthority.keyDir).then(() => {
             return Q.all([
@@ -98,33 +98,35 @@ class CertificateAuthority {
         });
     }
 
-    private _sign(commonName: string, subjectAltName?: string, verbose?: boolean)
-        : Q.Promise<string> {
+    private _sign(commonName: string, subjectAltName?: string): Q.Promise<string> {
 
-        var req = childProcess.spawn('openssl',
-            [
-                'req', '-new', '-sha256',
-                '-subj', util.format('/C=%s/ST=%s/O=%s/CN=%s',
-                    this.countryName,
-                    this.stateOrProvinceName,
-                    this.organizationName,
-                    commonName),
-                '-key', this.keyFile
-            ], { stdio: verbose ? [null, null, process.stderr] : null });
+        var reqArgs = [
+            'req', '-new', '-sha256',
+            '-subj', util.format('/C=%s/ST=%s/O=%s/CN=%s',
+                this.countryName,
+                this.stateOrProvinceName,
+                this.organizationName,
+                commonName),
+            '-key', this.keyFile
+        ]
 
-        var args = [
+        var req = childProcess.spawn('openssl', reqArgs, {
+            stdio: this.verbose ? [null, null, process.stderr] : null
+        });
+
+        var signArgs = [
             'x509', '-req', '-CAcreateserial',
             '-CA', this.caCertFile,
             '-CAkey', this.keyFile
         ];
 
         if (subjectAltName) {
-            args.push('-extfile', CertificateAuthority.configFile);
+            signArgs.push('-extfile', CertificateAuthority.configFile);
         }
 
-        var sign = childProcess.spawn('openssl', args, {
+        var sign = childProcess.spawn('openssl', signArgs, {
             env: { RANDFILE: CertificateAuthority.randFile, SAN: subjectAltName },
-            stdio: verbose ? [null, null, process.stderr] : null
+            stdio: this.verbose ? [null, null, process.stderr] : null
         });
 
         req.stdout.pipe(sign.stdin);
@@ -151,11 +153,9 @@ class CertificateAuthority {
         });
     }
 
-    sign(commonName: string, subjectAltName?: string, verbose?: boolean)
-        : Q.Promise<string> {
-
+    sign(commonName: string, subjectAltName?: string): Q.Promise<string> {
         return this._caCertificate.then((caCertificate) => {
-            return this._sign(commonName, subjectAltName, verbose);
+            return this._sign(commonName, subjectAltName);
         });
     }
 }

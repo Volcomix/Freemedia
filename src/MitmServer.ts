@@ -41,8 +41,12 @@ class MitmServer {
         }).then((context) => { callback(null, context); });
     }
 
-    private createServer(): Q.Promise<https.Server> {
-        return this.ca.caCertificate.then((caCert) => {
+    listen(port: number, hostname?: string, backlog?: number, cb?: Function): MitmServer;
+    listen(port: number, hostname?: string, cb?: Function): MitmServer;
+    listen(path: string, cb?: Function): MitmServer;
+    listen(handle: any, listeningListener?: Function): MitmServer;
+    listen(...args): MitmServer {
+        this.ca.caCertificate.then((caCert) => {
 
             return https.createServer(<any>{
                 key: caCert.privateKey,
@@ -50,24 +54,11 @@ class MitmServer {
                 SNICallback: this.getSecureContext
             }, this.requestListener);
 
+        }).then((server) => {
+            server.listen.apply(server, args);
         });
-    }
 
-    listen(port: number, hostname?: string, backlog?: number, callback?: Function)
-        : https.Server {
-
-    }
-
-    listen(port: number, hostname?: string, callback?: Function): https.Server {
-
-    }
-
-    listen(path: string, callback?: Function): https.Server {
-
-    }
-
-    listen(handle: any, listeningListener?: Function): https.Server {
-
+        return this;
     }
 }
 
