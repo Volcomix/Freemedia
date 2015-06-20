@@ -2,11 +2,16 @@ import https = require('https');
 import tls = require('tls');
 import util = require('util');
 
-import CA = require('CertificateAuthority');
+import CA = require('./CertificateAuthority');
 
 class MitmServer {
 
     private sni: tls.SecureContext[] = [];
+    private server: https.Server;
+
+    get address() {
+        return this.server.address();
+    }
 
     constructor(
         private requestListener?: Function,
@@ -48,17 +53,21 @@ class MitmServer {
     listen(...args): MitmServer {
         this.ca.caCertificate.then((caCert) => {
 
-            return https.createServer(<any>{
+            this.server = https.createServer(<any>{
                 key: caCert.privateKey,
                 cert: caCert.certificate,
                 SNICallback: this.getSecureContext
             }, this.requestListener);
 
-        }).then((server) => {
-            server.listen.apply(server, args);
+            this.server.listen.apply(this.server, args);
+
         });
 
         return this;
+    }
+
+    close(): https.Server {
+        return this.server.close();
     }
 }
 
