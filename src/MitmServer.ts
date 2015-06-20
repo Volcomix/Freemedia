@@ -6,11 +6,11 @@ import CA = require('CertificateAuthority');
 
 class MitmServer {
 
-    private ca: CA;
     private sni: tls.SecureContext[] = [];
 
-    constructor(private requestListener?: Function) {
-        this.ca = new CA('FR', 'Some-State', 'Freemedia', 'Freemedia');
+    constructor(
+        private requestListener?: Function,
+        private ca = new CA('FR', 'Some-State', 'MitmServer', 'MitmServer')) {
     }
 
     private getSecureContext(servername: string, callback: Function) {
