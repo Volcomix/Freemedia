@@ -41,13 +41,15 @@ app.use(function(req, res) {
     proxy.web(req, res, options);
 });
 
-CA.create('FR', 'Some-State', 'Freemedia', 'Freemedia').then((ca) => {
+var ca = new CA('FR', 'Some-State', 'Freemedia', 'Freemedia');
+
+ca.caCertificate.then((caCert) => {
 
     var sni: tls.SecureContext[] = [];
 
     var options: any = {
-        key: ca.privateKey,
-        cert: ca.certificate,
+        key: caCert.privateKey,
+        cert: caCert.certificate,
         SNICallback: (servername, cb) => {
             var domain = servername.split('.').slice(-2).join('.');
 
@@ -65,9 +67,9 @@ CA.create('FR', 'Some-State', 'Freemedia', 'Freemedia').then((ca) => {
                         .then((certificate) => {
 
                         resolve(sni[domain] = tls.createSecureContext({
-                            key: ca.privateKey,
+                            key: caCert.privateKey,
                             cert: certificate,
-                            ca: ca.certificate
+                            ca: caCert.certificate
                         }));
 
                     })

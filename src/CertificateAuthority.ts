@@ -15,17 +15,17 @@ class CertificateAuthority {
     private static randFile = 'ssl/.rnd';
     private static keyDir = 'keys/';
 
-    private get keyFile() {
+    private get keyFile(): string {
         return CertificateAuthority.keyDir + this.commonName + '-key.pem';
     }
 
-    private get caCertFile() {
+    private get caCertFile(): string {
         return CertificateAuthority.keyDir + this.commonName + '-CA-cert.pem';
     }
 
     private _caCertificate: Q.Promise<CertificateAuthority.CACertificate>;
 
-    get caCertificate() {
+    get caCertificate(): Q.Promise<CertificateAuthority.CACertificate> {
         return this._caCertificate;
     }
 
@@ -98,7 +98,8 @@ class CertificateAuthority {
         });
     }
 
-    private _sign(commonName: string, subjectAltName?: string, verbose?: boolean) {
+    private _sign(commonName: string, subjectAltName?: string, verbose?: boolean)
+        : Q.Promise<string> {
 
         var req = childProcess.spawn('openssl',
             [
@@ -150,7 +151,9 @@ class CertificateAuthority {
         });
     }
 
-    sign(commonName: string, subjectAltName?: string, verbose?: boolean) {
+    sign(commonName: string, subjectAltName?: string, verbose?: boolean)
+        : Q.Promise<string> {
+
         return this._caCertificate.then((caCertificate) => {
             return this._sign(commonName, subjectAltName, verbose);
         });
