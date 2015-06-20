@@ -6,6 +6,7 @@
   "dependencies": {
     "express": "^4.12.4",
     "http-proxy": "^1.11.1",
+    "mkdirp": "^0.5.1",
     "q": "^1.4.1"
   },
   "devDependencies": {

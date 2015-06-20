@@ -43,7 +43,7 @@ app.use(function(req, res) {
 
 CA.create('FR', 'Some-State', 'Freemedia', 'Freemedia').then((ca) => {
 
-    var sni = [];
+    var sni: tls.SecureContext[] = [];
 
     var options: any = {
         key: ca.privateKey,
@@ -64,7 +64,7 @@ CA.create('FR', 'Some-State', 'Freemedia', 'Freemedia').then((ca) => {
                     ca.sign(commonName, util.format('DNS: %s, DNS: %s', commonName, domain))
                         .then((certificate) => {
 
-                        resolve(sni[domain] = (<any>tls).createSecureContext({
+                        resolve(sni[domain] = tls.createSecureContext({
                             key: ca.privateKey,
                             cert: certificate,
                             ca: ca.certificate

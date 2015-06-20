@@ -1,42 +1,34 @@
 /// <reference path="../typings/node/node.d.ts"/>
+/// <reference path="../typings/mkdirp/mkdirp.d.ts"/>
 /// <reference path="../typings/q/Q.d.ts"/>
 
 import childProcess = require('child_process');
 import util = require('util');
 import fs = require('fs');
 
+import mkdirp = require('mkdirp');
 import Q = require('q');
 
 class CertificateAuthority {
 
     private static configFile = 'ssl/openssl.cnf';
     private static randFile = 'ssl/.rnd';
-
-    private countryName: string;
-    private stateOrProvinceName: string;
-    private organizationName: string;
-    private commonName: string;
+    private static keyDir = 'keys/';
 
     private get keyFile() {
-        return 'keys/' + this.commonName + '-key.pem';
+        return CertificateAuthority.keyDir + this.commonName + '-key.pem';
     }
 
     private get caCertFile() {
-        return 'keys/' + this.commonName + '-CA-cert.pem';
+        return CertificateAuthority.keyDir + this.commonName + '-CA-cert.pem';
     }
 
-    private _privateKey: string;
+    private _caCertificate: Q.Promise<CertificateAuthority.CACertificate>;
 
-    get privateKey() {
-        return this._privateKey;
+    get caCertificate() {
+        return this._caCertificate;
     }
 
-    private _certificate: string;
-
-    get certificate() {
-        return this._certificate;
-    }
-    
     /**
      * countryName: Country Name (2 letter code)
      * stateOrProvinceName: State or Province Name (full name)
@@ -44,28 +36,19 @@ class CertificateAuthority {
      * commonName: Common Name (e.g. server FQDN or YOUR name)
      * verbose: Redirect print OpenSSL stdout and stderr
      */
-    static create(
-        countryName: string,
-        stateOrProvinceName: string,
-        organizationName: string,
-        commonName: string,
+    constructor(
+        private countryName: string,
+        private stateOrProvinceName: string,
+        private organizationName: string,
+        private commonName: string,
         verbose?: boolean) {
 
-        var ca = new CertificateAuthority();
-        ca.countryName = countryName;
-        ca.stateOrProvinceName = stateOrProvinceName;
-        ca.organizationName = organizationName;
-        ca.commonName = commonName;
-
-        return ca.init(verbose);
-    }
-
-    private init(verbose?: boolean) {
-
-        return Q.all([
-            Q.nfcall(fs.stat, this.keyFile),
-            Q.nfcall(fs.stat, this.caCertFile)
-        ]).catch(() => {
+        this._caCertificate = Q.nfcall(mkdirp, CertificateAuthority.keyDir).then(() => {
+            return Q.all([
+                Q.nfcall(fs.stat, this.keyFile),
+                Q.nfcall(fs.stat, this.caCertFile)
+            ])
+        }).catch(() => {
 
             var req = childProcess.spawn('openssl',
                 [
@@ -84,18 +67,20 @@ class CertificateAuthority {
 
             req.stdout.pipe(sign.stdin);
 
-            req.on('close', (code) => {
-                if (code != 0) {
-                    throw new Error('Generating CA request process exited with code ' + code);
-                }
-            });
-
             return Q.Promise((resolve, reject) => {
+                req.on('close', (code) => {
+                    if (code != 0) {
+                        reject(new Error(
+                            'CA request process exited with code ' + code));
+                    }
+                });
+
                 sign.on('close', (code) => {
                     if (code == 0) {
                         resolve(code);
                     } else {
-                        throw new Error('CA signing process exited with code ' + code);
+                        reject(new Error(
+                            'CA signing process exited with code ' + code));
                     }
                 });
             });
@@ -105,15 +90,15 @@ class CertificateAuthority {
                 Q.nfcall(fs.readFile, this.keyFile),
                 Q.nfcall(fs.readFile, this.caCertFile)
             ];
-        }).spread<CertificateAuthority>((privateKey, certificate) => {
-            this._privateKey = '' + privateKey;
-            this._certificate = '' + certificate;
-            return this;
+        }).spread<CertificateAuthority.CACertificate>((privateKey, certificate) => {
+            return {
+                privateKey: '' + privateKey,
+                certificate: '' + certificate
+            };
         });
-
     }
 
-    sign(commonName: string, subjectAltName?: string, verbose?: boolean) {
+    private _sign(commonName: string, subjectAltName?: string, verbose?: boolean) {
 
         var req = childProcess.spawn('openssl',
             [
@@ -146,21 +131,36 @@ class CertificateAuthority {
         var certificate = '';
         sign.stdout.on('data', (data) => { certificate += data; });
 
-        req.on('close', (code) => {
-            if (code != 0) {
-                throw new Error('Generating request process exited with code ' + code);
-            }
-        });
-
         return Q.Promise<string>((resolve, reject) => {
+            req.on('close', (code) => {
+                if (code != 0) {
+                    reject(new Error(
+                        'Generating request process exited with code ' + code));
+                }
+            });
+
             sign.on('close', (code) => {
                 if (code == 0) {
                     resolve(certificate);
                 } else {
-                    throw new Error('Signing process exited with code ' + code);
+                    reject(new Error(
+                        'Signing process exited with code ' + code));
                 }
             });
         });
+    }
+
+    sign(commonName: string, subjectAltName?: string, verbose?: boolean) {
+        return this._caCertificate.then((caCertificate) => {
+            return this._sign(commonName, subjectAltName, verbose);
+        });
+    }
+}
+
+module CertificateAuthority {
+    export interface CACertificate {
+        privateKey: string;
+        certificate: string;
     }
 }
 
