@@ -36,17 +36,3 @@ gulp.task('test', ['build:test'], function () {
 	return gulp.src('build/test/**/*.js')
 		.pipe(mocha());
 });
-
-gulp.task('start:MitmServer', ['build'], function () {
-	var MitmServer = require('./build/src/MitmServer');
-
-	var mitmServer = new MitmServer(function (request, response) {
-		response.writeHead(200, { 'Content-Type': 'text/plain' });
-		response.end('OK');
-	}).listen(3129, function () {
-		var host = mitmServer.address.address;
-		var port = mitmServer.address.port;
-
-		console.log('Proxy listening at https://%s:%s', host, port);
-	});
-});
