@@ -16,7 +16,7 @@ describe('CertificateAuthority', function() {
 	describe('#constructor()', function() {
 		context('when 1st CA', function() {
 			before(function() {
-				ca = new CA('FR', 'Some-State', 'Test', 'Test');
+				ca = new CA('FR', 'Some-State', 'TestCA', 'TestCA');
 			});
 			it('should have private key', function() {
 				return ca.caCertificate.then(function(caCert) {
@@ -39,15 +39,15 @@ describe('CertificateAuthority', function() {
 				});
 			});
 			it('should create private key file', function() {
-				return Q.nfcall(fs.stat, 'keys/Test-key.pem');
+				return Q.nfcall(fs.stat, 'keys/TestCA-key.pem');
 			});
 			it('should create CA certificate file', function() {
-				return Q.nfcall(fs.stat, 'keys/Test-CA-cert.pem');
+				return Q.nfcall(fs.stat, 'keys/TestCA-CA-cert.pem');
 			});
 		});
 		context('when 2nd CA from same common name', function() {
 			it('should load existing CertificateAuthority', function() {
-				var newCA = new CA('FR', 'Some-State', 'Test', 'Test');
+				var newCA = new CA('FR', 'Some-State', 'TestCA', 'TestCA');
 
 				return Q.all([ca.caCertificate, newCA.caCertificate])
 					.spread(function(caCert: CA.CACertificate, newCACert: CA.CACertificate) {
@@ -81,7 +81,7 @@ describe('CertificateAuthority', function() {
 				return Q.nfcall(fs.stat, 'ssl/.rnd');
 			});
 			it('should create CA serial number file', function() {
-				return Q.nfcall<Buffer>(fs.readFile, 'keys/Test-CA-cert.srl')
+				return Q.nfcall<Buffer>(fs.readFile, 'keys/TestCA-CA-cert.srl')
 					.then(function(data) {
 
 					serial = '' + data;
@@ -102,7 +102,7 @@ describe('CertificateAuthority', function() {
 				});
 			});
 			it('should generate a new CA serial number', function() {
-				return Q.nfcall<Buffer>(fs.readFile, 'keys/Test-CA-cert.srl')
+				return Q.nfcall<Buffer>(fs.readFile, 'keys/TestCA-CA-cert.srl')
 					.then(function(data) {
 
 					var newSerial = '' + data;
@@ -123,7 +123,7 @@ describe('CertificateAuthority', function() {
 				});
 			});
 			it('should generate a new CA serial number', function() {
-				return Q.nfcall<Buffer>(fs.readFile, 'keys/Test-CA-cert.srl')
+				return Q.nfcall<Buffer>(fs.readFile, 'keys/TestCA-CA-cert.srl')
 					.then(function(data) {
 
 					var newSerial = '' + data;
@@ -134,10 +134,10 @@ describe('CertificateAuthority', function() {
 		it('should store certificates into subfolders');
 	});
 	after(function() {
-		return Q.nfcall(fs.unlink, 'keys/Test-key.pem').finally(function() {
-			return Q.nfcall(fs.unlink, 'keys/Test-CA-cert.pem');
+		return Q.nfcall(fs.unlink, 'keys/TestCA-key.pem').finally(function() {
+			return Q.nfcall(fs.unlink, 'keys/TestCA-CA-cert.pem');
 		}).finally(function() {
-			return Q.nfcall(fs.unlink, 'keys/Test-CA-cert.srl')
+			return Q.nfcall(fs.unlink, 'keys/TestCA-CA-cert.srl')
 		}).done();
 	});
 });

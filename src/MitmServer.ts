@@ -11,7 +11,7 @@ import CA = require('./CertificateAuthority');
 
 class MitmServer {
 
-    private sni: tls.SecureContext[] = [];
+    private sni: { [index: string]: tls.SecureContext } = {};
     private server: https.Server;
 
     get address() {
@@ -34,7 +34,7 @@ class MitmServer {
                 resolve(context);
             } else {
                 var commonName = '*.' + domain;
-                var subjectAltName = util.format('DNS: %s, DNS: %s', commonName, domain);
+                var subjectAltName = util.format('DNS: %s', domain);
 
                 console.log('Signing certificate: ' + commonName);
 
@@ -48,7 +48,9 @@ class MitmServer {
                     }));
                 });
             }
-        }).then((context) => { callback(null, context); });
+        }).then((context) => {
+            callback(null, context);
+        }).done();
     }
 
     listen(port: number, hostname?: string, backlog?: number, cb?: Function): MitmServer;
@@ -61,7 +63,7 @@ class MitmServer {
             this.server = https.createServer(<any>{
                 key: caCert.privateKey,
                 cert: caCert.certificate,
-                SNICallback: this.getSecureContext
+                SNICallback: this.getSecureContext.bind(this)
             }, this.requestListener);
 
             this.server.listen.apply(this.server, args);
