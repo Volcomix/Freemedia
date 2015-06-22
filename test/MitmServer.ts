@@ -32,9 +32,7 @@ describe('MitmServer', function() {
 			client.on('error', done);
 			client.on('end', done);
 		});
-	});
-	context('when started', function() {
-		it('should proxy HTTPS requests without SNI', function(done) {
+		it('should serve with self signed certificate', function(done) {
 			ca.caCertificate.then(function(caCert) {
 				var options = {
 					port: 13129,
@@ -52,7 +50,6 @@ describe('MitmServer', function() {
 				request.on('error', done);
 			});
 		});
-		it('should proxy HTTPS requests with SNI');
 	});
 	describe('#close()', function() {
 		it('should stop', function(done) {

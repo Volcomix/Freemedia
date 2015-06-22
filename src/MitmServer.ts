@@ -20,7 +20,8 @@ class MitmServer {
 
     constructor(
         private requestListener: Function,
-        private ca = new CA('FR', 'Some-State', 'MitmServer', 'MitmServer')) {
+        private ca = new CA('FR', 'Some-State', 'MitmServer', 'MitmServer'),
+        private verbose?: boolean) {
     }
 
     private getSecureContext(servername: string, callback: Function) {
@@ -36,7 +37,9 @@ class MitmServer {
                 var commonName = '*.' + domain;
                 var subjectAltName = util.format('DNS: %s', domain);
 
-                console.log('Signing certificate: ' + commonName);
+                if (this.verbose) {
+                    console.log('Signing certificate: ' + commonName);
+                }
 
                 this.ca.sign(commonName, subjectAltName).then((certificate) => {
                     return [certificate, this.ca.caCertificate];
