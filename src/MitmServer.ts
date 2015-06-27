@@ -26,7 +26,13 @@ class MitmServer {
 
     private getSecureContext(servername: string, callback: Function) {
 
-        var domain = servername.split('.').slice(-2).join('.');
+        var domain: string;
+        var domains = servername.split('.');
+        if (domains.length > 2) {
+            domain = domains.slice(1).join('.');
+        } else {
+            domain = domains.join('.');
+        }
 
         Q.Promise<tls.SecureContext>((resolve) => {
             var context: tls.SecureContext = this.sni[domain];
@@ -34,8 +40,14 @@ class MitmServer {
             if (context) {
                 resolve(context);
             } else {
-                var commonName = '*.' + domain;
-                var subjectAltName = util.format('DNS: %s, DNS: %s', commonName, domain);
+                var commonName: string, subjectAltName: string;
+                if (domains.length == 1) {
+                    commonName = domain;
+                    subjectAltName = util.format('DNS: %s', domain);
+                } else {
+                    commonName = '*.' + domain;
+                    subjectAltName = util.format('DNS: %s, DNS: %s', commonName, domain);
+                }
 
                 if (this.verbose) {
                     console.log('Signing certificate: ' + commonName);
