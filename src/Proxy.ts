@@ -2,20 +2,13 @@
 /// <reference path="../typings/express/express.d.ts"/>
 /// <reference path="../typings/http-proxy/http-proxy.d.ts"/>
 
-import http = require('http');
-import https = require('https');
-import tls = require('tls');
-import fs = require('fs');
-import net = require('net');
 import url = require('url');
-import util = require('util');
 
 import express = require('express');
 import httpProxy = require('http-proxy');
-import Q = require('q');
 
 import CA = require('./CertificateAuthority');
-import MitmServer = require('./MitmServer');
+import ProxyServer = require('./ProxyServer');
 
 var proxy = httpProxy.createProxyServer({});
 
@@ -43,43 +36,11 @@ app.use(function(req, res) {
 });
 
 var ca = new CA('FR', 'Some-State', 'Freemedia', 'Freemedia');
+var proxyServer = new ProxyServer(app, ca, true).listen(3128, () => {
 
-var mitmServer = new MitmServer(app, ca).listen(3129, () => {
-    var host = mitmServer.address.address;
-    var port = mitmServer.address.port;
-
-    console.log('Internal MITM server listening at https://%s:%s', host, port);
-});
-
-var proxyServer = http.createServer(app).listen(3128, () => {
-
-    var host = proxyServer.address().address;
-    var port = proxyServer.address().port;
+    var host = proxyServer.address.address;
+    var port = proxyServer.address.port;
 
     console.log('Proxy listening at http://%s:%s', host, port);
 
-});
-
-proxyServer.on('connect', (
-    req: http.IncomingMessage,
-    cltSocket: net.Socket,
-    head: { [key: string]: string; }) => {
-
-    //console.log('Piping to MITM server: ' + req.url);
-
-    var mitmSocket = net.connect(
-        mitmServer.address.port,
-        mitmServer.address.address,
-        () => {
-            cltSocket.write(
-                'HTTP/1.1 200 Connection Established\r\n' +
-                '\r\n');
-            mitmSocket.write(head);
-            mitmSocket.pipe(cltSocket);
-            cltSocket.pipe(mitmSocket);
-        });
-
-    mitmSocket.on('error', (err) => {
-        console.error(err);
-    });
 });

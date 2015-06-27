@@ -35,7 +35,7 @@ class MitmServer {
                 resolve(context);
             } else {
                 var commonName = '*.' + domain;
-                var subjectAltName = util.format('DNS: %s', domain);
+                var subjectAltName = util.format('DNS: %s, DNS: %s', commonName, domain);
 
                 if (this.verbose) {
                     console.log('Signing certificate: ' + commonName);
