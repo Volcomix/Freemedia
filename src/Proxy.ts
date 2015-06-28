@@ -8,6 +8,7 @@ import express = require('express');
 import httpProxy = require('http-proxy');
 
 import CA = require('./CertificateAuthority');
+import MitmServer = require('./MitmServer');
 import ProxyServer = require('./ProxyServer');
 
 var proxy = httpProxy.createProxyServer({});
@@ -30,13 +31,21 @@ app.use(function(req, res) {
         target: reqUrl.protocol + '//' + reqUrl.host
     };
 
-    //console.log(reqUrl.href);
+    console.log(reqUrl.href);
 
     proxy.web(req, res, options);
 });
 
 var ca = new CA('FR', 'Some-State', 'Freemedia', 'Freemedia');
-var proxyServer = new ProxyServer(app, ca, true).listen(3128, () => {
+
+var mitmServer = new MitmServer(app, ca).listen(3129, () => {
+    var host = mitmServer.address.address;
+    var port = mitmServer.address.port;
+
+    console.log('MITM server listening at https://%s:%s', host, port);
+});
+
+var proxyServer = new ProxyServer(app, mitmServer).listen(3128, () => {
 
     var host = proxyServer.address.address;
     var port = proxyServer.address.port;

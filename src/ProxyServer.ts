@@ -3,12 +3,10 @@
 import http = require('http');
 import net = require('net');
 
-import CA = require('./CertificateAuthority');
 import MitmServer = require('./MitmServer');
 
 class ProxyServer {
 
-    private mitmServer: MitmServer;
     private server: http.Server;
 
     get address() {
@@ -18,17 +16,8 @@ class ProxyServer {
     constructor(
         private requestListener:
         (request: http.IncomingMessage, response: http.ServerResponse) => void,
-        ca?: CA,
+        private mitmServer = new MitmServer(requestListener),
         private verbose?: boolean) {
-
-        this.mitmServer = new MitmServer(requestListener, ca, verbose).listen(3129, () => {
-            var host = this.mitmServer.address.address;
-            var port = this.mitmServer.address.port;
-
-            if (verbose) {
-                console.log('MITM server listening at https://%s:%s', host, port);
-            }
-        });
 
         this.server = http.createServer(requestListener);
     }
