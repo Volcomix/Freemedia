@@ -1,0 +1,77 @@
+/// <reference path="../typings/node/node.d.ts"/>
+/// <reference path="../typings/mocha/mocha.d.ts"/>
+/// <reference path="../typings/chai/chai.d.ts"/>
+/// <reference path="../typings/request/request.d.ts"/>
+
+import net = require('net');
+import http = require('http');
+import fs = require('fs');
+
+require('chai').should();
+import Q = require('q');
+import request = require('request');
+
+import CA = require('../src/CertificateAuthority');
+import MitmServer = require('../src/MitmServer');
+import ProxyServer = require('../src/ProxyServer');
+
+describe('ProxyServer', function() {
+	var ca = new CA('FR', 'Some-State', 'TestProxyServer', 'TestProxyServer');
+	var mitmServer: MitmServer;
+	var proxyServer: ProxyServer;
+
+	before(function(done) {
+		mitmServer = new MitmServer(function(request, response) {
+			response.writeHead(200, { 'Content-Type': 'text/plain' });
+			response.end('MitmServer OK');
+		}, ca).listen(13130, done);
+	});
+	describe('#listen()', function() {
+		it('should start', function(done) {
+			proxyServer = new ProxyServer(function(request, response) {
+				response.writeHead(200, { 'Content-Type': 'text/plain' });
+				response.end('ProxyServer OK');
+			}, mitmServer).listen(13131, done);
+		});
+		it('should be listening', function(done) {
+			proxyServer.address.port.should.be.equal(13131);
+			var client = net.connect(13131, 'localhost', function() {
+				client.end();
+			});
+			client.on('error', done);
+			client.on('end', done);
+		});
+		it('should proxy HTTP through ProxyServer', function() {
+			return Q.nfcall(request, 'http://test.proxy.server/', {
+				proxy: 'http://localhost:13131'
+			}).spread(function(response: http.IncomingMessage, body: any) {
+				response.statusCode.should.be.equal(200);
+				body.should.be.equal('ProxyServer OK');
+			});
+		});
+		it('should proxy HTTPS through MitmServer');
+	});
+	describe('#close()', function() {
+		it('should stop', function(done) {
+			proxyServer.close().on('close', done);
+		});
+		it('should not be listening anymore', function(done) {
+			var client = net.connect(13131, 'localhost', function() {
+				client.end();
+				done(new Error('ProxyServer is still listening on port 13131'));
+			});
+			client.on('error', function() { done(); });
+		});
+	});
+	after(function() {
+		Q.Promise(function(resolve) {
+			mitmServer.close().on('close', resolve);
+		}).finally(function() {
+			return Q.nfcall(fs.unlink, 'keys/TestProxyServer-key.pem');
+		}).finally(function() {
+			return Q.nfcall(fs.unlink, 'keys/TestProxyServer-CA-cert.pem');
+		}).finally(function() {
+			return Q.nfcall(fs.unlink, 'keys/TestProxyServer-CA-cert.srl')
+		}).done();
+	});
+});
