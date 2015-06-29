@@ -49,7 +49,17 @@ describe('ProxyServer', function() {
 				body.should.be.equal('ProxyServer OK');
 			});
 		});
-		it('should proxy HTTPS through MitmServer');
+		it('should proxy HTTPS through MitmServer', function() {
+			return ca.caCertificate.then(function(caCert) {
+				return Q.nfcall(request, 'https://test.mitm.server/', {
+					proxy: 'http://localhost:13131',
+					ca: caCert.certificate
+				})
+			}).spread(function(response: http.IncomingMessage, body: any) {
+				response.statusCode.should.be.equal(200);
+				body.should.be.equal('MitmServer OK');
+			});
+		});
 	});
 	describe('#close()', function() {
 		it('should stop', function(done) {
