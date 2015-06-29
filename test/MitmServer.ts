@@ -4,11 +4,12 @@
 /// <reference path="../typings/q/Q.d.ts"/>
 
 import net = require('net');
-import https = require('https');
+import http = require('http');
 import fs = require('fs');
 
 require('chai').should();
 import Q = require('q');
+import request = require('request');
 
 import CA = require('../src/CertificateAuthority');
 import MitmServer = require('../src/MitmServer');
@@ -32,22 +33,14 @@ describe('MitmServer', function() {
 			client.on('error', done);
 			client.on('end', done);
 		});
-		it('should serve with self signed certificate', function(done) {
-			ca.caCertificate.then(function(caCert) {
-				var options = {
-					port: 13129,
-					ca: caCert.certificate,
-					agent: false
-				};
-
-				var request = https.get(options, function(response) {
-					response.statusCode.should.be.equal(200);
-					response.on('data', function(data) {
-						('' + data).should.be.equal('OK');
-					});
-					response.on('end', done);
+		it('should serve with self signed certificate', function() {
+			return ca.caCertificate.then(function(caCert) {
+				return Q.nfcall(request, 'https://localhost:13129', {
+					ca: caCert.certificate
 				});
-				request.on('error', done);
+			}).spread(function(response: http.IncomingMessage, body: any) {
+				response.statusCode.should.be.equal(200);
+				body.should.be.equal('OK');
 			});
 		});
 	});
