@@ -131,7 +131,6 @@ describe('CertificateAuthority', function() {
 				});
 			});
 		});
-		it('should store certificates into subfolders');
 	});
 	after(function() {
 		return Q.nfcall(fs.unlink, 'keys/TestCA-key.pem').finally(function() {
