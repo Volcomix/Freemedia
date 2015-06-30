@@ -1,39 +1,29 @@
 /// <reference path="../typings/node/node.d.ts"/>
 /// <reference path="../typings/express/express.d.ts"/>
-/// <reference path="../typings/http-proxy/http-proxy.d.ts"/>
+/// <reference path="../typings/request/request.d.ts"/>
 
 import url = require('url');
 
 import express = require('express');
-import httpProxy = require('http-proxy');
+import request = require('request');
 
 import CA = require('./CertificateAuthority');
 import MitmServer = require('./MitmServer');
 import ProxyServer = require('./ProxyServer');
 
-var proxy = httpProxy.createProxyServer({});
-
-proxy.on('error', function(err, req, res) {
-    console.error(err);
-});
-
 var app = express();
 
 app.use(function(req, res) {
-    var reqUrl: url.Url;
+    var reqUrl: string;
     if (req.secure) {
-        reqUrl = url.parse(url.resolve(req.protocol + '://' + req.header('host'), req.url));
+        reqUrl = url.resolve(req.protocol + '://' + req.header('host'), req.url);
     } else {
-        reqUrl = url.parse(req.url);
+        reqUrl = req.url;
     }
 
-    var options: httpProxy.Options = {
-        target: reqUrl.protocol + '//' + reqUrl.host
-    };
+    console.log(reqUrl);
 
-    console.log(reqUrl.href);
-
-    proxy.web(req, res, options);
+    req.pipe(request(reqUrl)).pipe(res);
 });
 
 var ca = new CA('FR', 'Some-State', 'Freemedia', 'Freemedia');
