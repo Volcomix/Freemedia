@@ -28,7 +28,7 @@ class MitmProxy {
 				console.log(reqUrl);
 			}
 
-			req.pipe(request(reqUrl)).pipe(res);
+			req.pipe(request({ uri: reqUrl, followRedirect: false })).pipe(res);
 		});
 	}
 
