@@ -1,6 +1,5 @@
 node_modules
 typings
-!typings/http-proxy/http-proxy.d.ts
 build
 keys
 ssl/.rnd
