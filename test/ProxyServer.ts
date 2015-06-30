@@ -16,11 +16,12 @@ import MitmServer = require('../src/MitmServer');
 import ProxyServer = require('../src/ProxyServer');
 
 describe('ProxyServer', function() {
-	var ca = new CA('FR', 'Some-State', 'TestProxyServer', 'TestProxyServer');
+	var ca: CA;
 	var mitmServer: MitmServer;
 	var proxyServer: ProxyServer;
 
 	before(function(done) {
+		ca = new CA('FR', 'Some-State', 'TestProxy', 'TestProxy');
 		mitmServer = new MitmServer(function(request, response) {
 			response.writeHead(200, { 'Content-Type': 'text/plain' });
 			response.end('MitmServer OK');
@@ -77,11 +78,11 @@ describe('ProxyServer', function() {
 		Q.Promise(function(resolve) {
 			mitmServer.close().on('close', resolve);
 		}).finally(function() {
-			return Q.nfcall(fs.unlink, 'keys/TestProxyServer-key.pem');
+			return Q.nfcall(fs.unlink, 'keys/TestProxy-key.pem');
 		}).finally(function() {
-			return Q.nfcall(fs.unlink, 'keys/TestProxyServer-CA-cert.pem');
+			return Q.nfcall(fs.unlink, 'keys/TestProxy-CA-cert.pem');
 		}).finally(function() {
-			return Q.nfcall(fs.unlink, 'keys/TestProxyServer-CA-cert.srl')
+			return Q.nfcall(fs.unlink, 'keys/TestProxy-CA-cert.srl');
 		}).done();
 	});
 });

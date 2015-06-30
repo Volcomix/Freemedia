@@ -15,10 +15,13 @@ import CA = require('../src/CertificateAuthority');
 import MitmServer = require('../src/MitmServer');
 
 describe('MitmServer', function() {
-	var ca = new CA('FR', 'Some-State', 'TestMITM', 'TestMITM');
+	var ca: CA;
 	var mitmServer: MitmServer;
 
 	describe('#listen()', function() {
+		before(function() {
+			ca = new CA('FR', 'Some-State', 'TestMitm', 'TestMitm');
+		});
 		it('should start', function(done) {
 			mitmServer = new MitmServer(function(request, response) {
 				response.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -57,10 +60,10 @@ describe('MitmServer', function() {
 		});
 	});
 	after(function() {
-		return Q.nfcall(fs.unlink, 'keys/TestMITM-key.pem').finally(function() {
-			return Q.nfcall(fs.unlink, 'keys/TestMITM-CA-cert.pem');
+		return Q.nfcall(fs.unlink, 'keys/TestMitm-key.pem').finally(function() {
+			return Q.nfcall(fs.unlink, 'keys/TestMitm-CA-cert.pem');
 		}).finally(function() {
-			return Q.nfcall(fs.unlink, 'keys/TestMITM-CA-cert.srl')
+			return Q.nfcall(fs.unlink, 'keys/TestMitm-CA-cert.srl');
 		}).done();
 	});
 });
