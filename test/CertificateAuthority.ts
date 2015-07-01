@@ -25,7 +25,7 @@ describe('CertificateAuthority', function() {
 						.should.be.equal(0);
 
 					caCert.privateKey.indexOf('-----END PRIVATE KEY-----')
-						.should.be.greaterThan(0);
+						.should.be.above(0);
 				});
 			});
 			it('should have CA certificate', function() {
@@ -35,7 +35,7 @@ describe('CertificateAuthority', function() {
 						.should.be.equal(0);
 
 					caCert.certificate.indexOf('-----END CERTIFICATE-----')
-						.should.be.greaterThan(0);
+						.should.be.above(0);
 				});
 			});
 			it('should create private key file', function() {
@@ -74,7 +74,7 @@ describe('CertificateAuthority', function() {
 						.should.be.equal(0);
 
 					certificate.indexOf('-----END CERTIFICATE-----')
-						.should.be.greaterThan(0);
+						.should.be.above(0);
 				});
 			});
 			it('should write random state', function() {
@@ -98,7 +98,7 @@ describe('CertificateAuthority', function() {
 						.should.be.equal(0);
 
 					certificate.indexOf('-----END CERTIFICATE-----')
-						.should.be.greaterThan(0);
+						.should.be.above(0);
 				});
 			});
 			it('should generate a new CA serial number', function() {
@@ -119,7 +119,7 @@ describe('CertificateAuthority', function() {
 						.should.be.equal(0);
 
 					certificate.indexOf('-----END CERTIFICATE-----')
-						.should.be.greaterThan(0);
+						.should.be.above(0);
 				});
 			});
 			it('should generate a new CA serial number', function() {

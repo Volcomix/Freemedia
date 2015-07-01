@@ -33,7 +33,7 @@ class MitmProxy {
 				console.log(reqUrl);
 			}
 
-			req.pipe(request({ uri: reqUrl, followRedirect: false })).pipe(res);
+			req.pipe(request(reqUrl, { followRedirect: false })).pipe(res);
 		});
 
 		this.mitmServer = new MitmServer(app, ca, mitmVerbose);
@@ -66,7 +66,11 @@ class MitmProxy {
 					resolve({});
 				});
 			})
-		]).done(() => { listeningListener(); });
+		]).done(() => {
+			if (listeningListener) {
+				listeningListener();
+			}
+		});
 
 		return this;
 	}
@@ -79,7 +83,11 @@ class MitmProxy {
 			Q.Promise((resolve) => {
 				this.mitmServer.close().on('close', resolve);
 			})
-		]).done(() => { listeningListener(); });
+		]).done(() => {
+			if (listeningListener) {
+				listeningListener();
+			}
+		});
 	}
 }
 

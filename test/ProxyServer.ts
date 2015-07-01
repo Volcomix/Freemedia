@@ -1,6 +1,7 @@
 /// <reference path="../typings/node/node.d.ts"/>
 /// <reference path="../typings/mocha/mocha.d.ts"/>
 /// <reference path="../typings/chai/chai.d.ts"/>
+/// <reference path="../typings/q/Q.d.ts"/>
 /// <reference path="../typings/request/request.d.ts"/>
 
 import net = require('net');
@@ -55,7 +56,7 @@ describe('ProxyServer', function() {
 				return Q.nfcall(request, 'https://test.mitm.server/', {
 					proxy: 'http://localhost:13131',
 					ca: caCert.certificate
-				})
+				});
 			}).spread(function(response: http.IncomingMessage, body: any) {
 				response.statusCode.should.be.equal(200);
 				body.should.be.equal('MitmServer OK');
