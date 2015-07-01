@@ -35,6 +35,5 @@ gulp.task('develop', ['build', 'watch'], function () {
 gulp.task('test', ['build:test'], function () {
 	return gulp.src('build/test/**/*.js')
 		.pipe(mocha())
-		.once('error', function () { process.exit(1); })
-		.once('end', function () { process.exit(); });
+		.once('error', function () { process.exit(1); });
 });
