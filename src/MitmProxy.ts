@@ -40,7 +40,7 @@ class MitmProxy {
 		this.proxyServer = new ProxyServer(app, this.mitmServer, proxyVerbose)
 	}
 
-	listen(proxyPort = 3128, mitmPort = 3129, listeningListener?: () => void) {
+	listen(proxyPort = 3128, mitmPort = 3129, listeningListener?: () => void): MitmProxy {
 		Q.all([
 			Q.Promise((resolve) => {
 				this.mitmServer.listen(mitmPort, () => {
@@ -65,6 +65,19 @@ class MitmProxy {
 
 					resolve({});
 				});
+			})
+		]).done(() => { listeningListener(); });
+
+		return this;
+	}
+
+	close(listeningListener?: () => void) {
+		Q.all([
+			Q.Promise((resolve) => {
+				this.proxyServer.close().on('close', resolve);
+			}),
+			Q.Promise((resolve) => {
+				this.mitmServer.close().on('close', resolve);
 			})
 		]).done(() => { listeningListener(); });
 	}
