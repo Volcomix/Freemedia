@@ -27,8 +27,8 @@ gulp.task('watch', function () {
 
 gulp.task('develop', ['build', 'watch'], function () {
 	nodemon({
-		script: 'build/src/Proxy.js',
-		watch: ['build/src/Proxy.js']
+		script: 'build/src/Freemedia.js',
+		watch: ['build/src/Freemedia.js']
 	});
 });
 
