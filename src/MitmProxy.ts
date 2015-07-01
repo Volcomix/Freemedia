@@ -59,7 +59,9 @@ class MitmProxy {
 					var host = this.proxyServer.address.address;
 					var port = this.proxyServer.address.port;
 
-					console.log('Proxy listening at http://%s:%s', host, port);
+					if (this.verbose) {
+						console.log('Proxy listening at http://%s:%s', host, port);
+					}
 
 					resolve({});
 				});
