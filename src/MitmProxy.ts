@@ -18,27 +18,38 @@ class MitmProxy {
 	private mitmServer: MitmServer;
 	private proxyServer: ProxyServer;
 
-	constructor(app = express(), ca?: CA,
+	constructor(app?: express.Express, ca?: CA,
 		private verbose?: boolean, proxyVerbose?: boolean, mitmVerbose?: boolean) {
 
-		app.use((req, res) => {
-			var reqUrl: string;
+		var externalApp = !!app;
+
+		if (!externalApp) {
+			app = express();
+		}
+
+		app.use((req: express.Request, res: express.Response, next: Function) => {
 			if (req.secure) {
-				reqUrl = url.resolve(req.protocol + '://' + req.header('host'), req.url);
-			} else {
-				reqUrl = req.url;
+				req.url = url.resolve(req.protocol + '://' + req.header('host'), req.url);
 			}
-
-			if (this.verbose) {
-				console.log(reqUrl);
-			}
-
-			req.pipe(request(reqUrl, { followRedirect: false })).pipe(res);
+			next();
 		});
+
+		if (!externalApp) {
+			app.use(this.proxy);
+		}
 
 		this.mitmServer = new MitmServer(app, ca, mitmVerbose);
 		this.proxyServer = new ProxyServer(app, this.mitmServer, proxyVerbose)
 	}
+
+	proxy = (req: express.Request, res: express.Response, next: Function) => {
+		if (this.verbose) {
+			console.log(req.url);
+		}
+		req.pipe(request(req.url, { followRedirect: false }, () => {
+			next();
+		})).pipe(res);
+	};
 
 	listen(proxyPort = 3128, mitmPort = 3129, listeningListener?: () => void): MitmProxy {
 		Q.all([
