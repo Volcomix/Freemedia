@@ -7,7 +7,7 @@ import MitmServer = require('./MitmServer');
 
 class ProxyServer {
 
-    private server: http.Server;
+    public server: http.Server;
 
     get address() {
         return this.server.address();

@@ -1,0 +1,12 @@
+<html>
+	<head>
+		<script>
+			var ws = new WebSocket('ws://localhost:3128');
+			ws.onmessage = function (event) {
+				console.log(event.data);
+			};
+		</script>
+	</head>
+	<body></body>
+
+</html>

@@ -15,8 +15,8 @@ import ProxyServer = require('./ProxyServer');
 
 class MitmProxy {
 
-	private mitmServer: MitmServer;
-	private proxyServer: ProxyServer;
+	public mitmServer: MitmServer;
+	public proxyServer: ProxyServer;
 
 	constructor(app?: express.Express, ca?: CA,
 		private verbose?: boolean, proxyVerbose?: boolean, mitmVerbose?: boolean) {

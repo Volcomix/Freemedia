@@ -6,43 +6,46 @@
   "bundle": "typings/tsd.d.ts",
   "installed": {
     "chai/chai.d.ts": {
-      "commit": "d73cbcb405788eb85cc4a4167b963ef4dd630cdc"
+      "commit": "ab3cc82066805007cbf0db233ddb5879f42be4d2"
     },
     "express/express.d.ts": {
-      "commit": "d73cbcb405788eb85cc4a4167b963ef4dd630cdc"
+      "commit": "ab3cc82066805007cbf0db233ddb5879f42be4d2"
     },
     "gulp/gulp.d.ts": {
-      "commit": "d73cbcb405788eb85cc4a4167b963ef4dd630cdc"
+      "commit": "ab3cc82066805007cbf0db233ddb5879f42be4d2"
     },
     "gulp-mocha/gulp-mocha.d.ts": {
-      "commit": "d73cbcb405788eb85cc4a4167b963ef4dd630cdc"
+      "commit": "ab3cc82066805007cbf0db233ddb5879f42be4d2"
     },
     "gulp-typescript/gulp-typescript.d.ts": {
-      "commit": "d73cbcb405788eb85cc4a4167b963ef4dd630cdc"
+      "commit": "ab3cc82066805007cbf0db233ddb5879f42be4d2"
     },
     "mocha/mocha.d.ts": {
-      "commit": "d73cbcb405788eb85cc4a4167b963ef4dd630cdc"
+      "commit": "ab3cc82066805007cbf0db233ddb5879f42be4d2"
     },
     "node/node.d.ts": {
-      "commit": "d73cbcb405788eb85cc4a4167b963ef4dd630cdc"
+      "commit": "ab3cc82066805007cbf0db233ddb5879f42be4d2"
     },
     "q/Q.d.ts": {
-      "commit": "d73cbcb405788eb85cc4a4167b963ef4dd630cdc"
+      "commit": "ab3cc82066805007cbf0db233ddb5879f42be4d2"
     },
     "mkdirp/mkdirp.d.ts": {
-      "commit": "d73cbcb405788eb85cc4a4167b963ef4dd630cdc"
+      "commit": "ab3cc82066805007cbf0db233ddb5879f42be4d2"
     },
     "request/request.d.ts": {
-      "commit": "d73cbcb405788eb85cc4a4167b963ef4dd630cdc"
+      "commit": "ab3cc82066805007cbf0db233ddb5879f42be4d2"
     },
     "serve-static/serve-static.d.ts": {
-      "commit": "d73cbcb405788eb85cc4a4167b963ef4dd630cdc"
+      "commit": "ab3cc82066805007cbf0db233ddb5879f42be4d2"
     },
     "mime/mime.d.ts": {
-      "commit": "d73cbcb405788eb85cc4a4167b963ef4dd630cdc"
+      "commit": "ab3cc82066805007cbf0db233ddb5879f42be4d2"
     },
     "form-data/form-data.d.ts": {
-      "commit": "d73cbcb405788eb85cc4a4167b963ef4dd630cdc"
+      "commit": "ab3cc82066805007cbf0db233ddb5879f42be4d2"
+    },
+    "ws/ws.d.ts": {
+      "commit": "ab3cc82066805007cbf0db233ddb5879f42be4d2"
     }
   }
 }
