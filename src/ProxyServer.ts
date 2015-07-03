@@ -7,10 +7,14 @@ import MitmServer = require('./MitmServer');
 
 class ProxyServer {
 
-    public server: http.Server;
+    private _server: http.Server;
+    
+    get server() {
+        return this._server;
+    }
 
     get address() {
-        return this.server.address();
+        return this._server.address();
     }
 
     constructor(
@@ -19,7 +23,7 @@ class ProxyServer {
         private mitmServer = new MitmServer(requestListener),
         private verbose?: boolean) {
 
-        this.server = http.createServer(requestListener);
+        this._server = http.createServer(requestListener);
     }
 
     listen(port: number, hostname?: string, backlog?: number, cb?: Function): ProxyServer;
@@ -27,7 +31,7 @@ class ProxyServer {
     listen(path: string, cb?: Function): ProxyServer;
     listen(handle: any, listeningListener?: Function): ProxyServer;
     listen(...args): ProxyServer {
-        this.server.listen.apply(this.server, args).on('connect', (
+        this._server.listen.apply(this._server, args).on('connect', (
             req: http.IncomingMessage,
             cltSocket: net.Socket,
             head: { [key: string]: string; }) => {
@@ -56,7 +60,7 @@ class ProxyServer {
     }
 
     close(): http.Server {
-        return this.server.close();
+        return this._server.close();
     }
 }
 

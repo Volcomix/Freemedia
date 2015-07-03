@@ -12,7 +12,7 @@ import CA = require('./CertificateAuthority');
 class MitmServer {
 
     private sni: { [index: string]: tls.SecureContext } = {};
-    public server: https.Server;
+    private server: https.Server;
 
     get address() {
         return this.server.address();

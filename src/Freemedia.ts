@@ -11,7 +11,7 @@ import MitmProxy = require('./MitmProxy');
 var app = express();
 
 var mitmProxy = new MitmProxy(app, new CA('FR', 'Some-State', 'Freemedia', 'Freemedia'));
-var wss = new WebSocket.Server({ server: mitmProxy.proxyServer.server });
+var wss = new WebSocket.Server({ server: mitmProxy.server });
 
 app.use(function(req: express.Request, res: express.Response, next: Function) {
 	console.log(req.url);
