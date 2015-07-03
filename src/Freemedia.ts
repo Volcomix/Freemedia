@@ -1,8 +1,6 @@
 /// <reference path="../typings/node/node.d.ts"/>
 /// <reference path="../typings/express/express.d.ts"/>
 
-import url = require('url');
-
 import express = require('express');
 
 import CA = require('./CertificateAuthority');
