@@ -17,7 +17,7 @@ class MitmProxy {
 
 	private mitmServer: MitmServer;
 	private proxyServer: ProxyServer;
-	
+
 	get server() {
 		return this.proxyServer.server;
 	}
@@ -46,14 +46,11 @@ class MitmProxy {
 		this.proxyServer = new ProxyServer(app, this.mitmServer, proxyVerbose)
 	}
 
-	proxy = (req: express.Request, res: express.Response, next: Function) => {
-		if (this.verbose) {
-			console.log(req.url);
-		}
+	proxy(req: express.Request, res: express.Response, next: Function) {
 		req.pipe(request(req.url, { followRedirect: false }, () => {
 			next();
 		})).pipe(res);
-	};
+	}
 
 	listen(proxyPort = 3128, mitmPort = 3129, listeningListener?: () => void): MitmProxy {
 		Q.all([
