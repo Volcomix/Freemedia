@@ -1,6 +1,4 @@
-/// <reference path="../typings/node/node.d.ts"/>
-/// <reference path="../typings/express/express.d.ts"/>
-/// <reference path="../typings/ws/ws.d.ts"/>
+/// <reference path="../typings/tsd.d.ts"/>
 
 import express = require('express');
 import WebSocket = require('ws');
