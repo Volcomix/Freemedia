@@ -3,8 +3,8 @@
 import express = require('express');
 import WebSocket = require('ws');
 
-import CA = require('./CertificateAuthority');
-import MitmProxy = require('./MitmProxy');
+import CA = require('certificate-authority');
+import MitmProxy = require('express-mitm-proxy');
 
 var app = express();
 

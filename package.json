@@ -1,20 +1,24 @@
 {
   "name": "freemedia",
   "version": "0.0.1",
-  "description": "",
-  "main": "build/Proxy.js",
+  "description": "Send videos from Internet browser to Freebox via Air Media API",
+  "main": "release/Freemedia.js",
+  "scripts": {
+    "test": "gulp test"
+  },
+  "author": {
+    "name": "Volcomix"
+  },
+  "license": "ISC",
   "dependencies": {
+    "certificate-authority": "git+https://github.com/Volcomix/certificate-authority.git",
     "express": "^4.12.4",
+    "express-mitm-proxy": "git+https://github.com/Volcomix/express-mitm-proxy.git",
     "ws": "^0.7.2"
   },
   "devDependencies": {
     "gulp": "^3.9.0",
     "gulp-nodemon": "^2.0.3",
     "gulp-typescript": "^2.7.6"
-  },
-  "scripts": {
-    "test": "gulp test"
-  },
-  "author": "",
-  "license": "ISC"
+  }
 }
