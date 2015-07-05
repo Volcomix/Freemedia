@@ -11,25 +11,35 @@ var app = express();
 var mitmProxy = new MitmProxy(app, new CA('FR', 'Some-State', 'Freemedia', 'Freemedia'));
 var wss = new WebSocket.Server({ server: mitmProxy.server });
 
-app.use(function(req: express.Request, res: express.Response, next: Function) {
-	if (req.url.indexOf('/') == 0) {
-		express.static('app')(req, res, next);
-	} else {
-		console.log(req.url);
-		wss.clients.forEach(function(ws) {
-			ws.send(req.url);
-		});
-		next();
-	}
+var staticRouter = express.Router();
+staticRouter.use(express.static('app'));
+staticRouter.use(express.static('bower_components'));
+
+var proxyRouter = express.Router();
+
+proxyRouter.use(function(req: express.Request, res: express.Response, next: Function) {
+    console.log(req.url);
+    wss.clients.forEach(function(ws) {
+        ws.send(req.url);
+    });
+    next();
 });
 
-app.use(mitmProxy.proxy);
+proxyRouter.use(mitmProxy.proxy);
 
-app.use(function(req: express.Request, res: express.Response, next: Function) {
-	console.log(res.statusCode);
-	next();
+proxyRouter.use(function(req: express.Request, res: express.Response, next: Function) {
+    console.log(res.statusCode);
+    next();
 });
 
-mitmProxy.listen(3128, 3129, function() {
-	console.log('Proxy listening at http://0.0.0.0:3128');
+app.use(function(req: express.Request, res: express.Response, next: Function) {
+    if (req.url.indexOf('/') == 0) {
+        staticRouter(req, res, next);
+    } else {
+        proxyRouter(req, res, next);
+    }
+});
+
+mitmProxy.listen(8080, 3129, function() {
+    console.log('Proxy listening at http://0.0.0.0:8080');
 });

@@ -1,12 +1,13 @@
+<!DOCTYPE html>
 <html>
-	<head>
-		<script>
-			var ws = new WebSocket('ws://localhost:3128');
-			ws.onmessage = function (event) {
-				console.log(event.data);
-			};
-		</script>
-	</head>
-	<body></body>
+    
+    <head>
+        <script src="webcomponentsjs/webcomponents-lite.min.js"></script>
+        <link rel="import" href="elements/fm-video.html">
+    </head>
+    
+    <body>
+        <fm-video></fm-video>
+    </body>
 
 </html>
