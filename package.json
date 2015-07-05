@@ -6,10 +6,24 @@
   "scripts": {
     "test": "gulp test"
   },
-  "author": {
-    "name": "Volcomix"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Volcomix/freemedia.git"
   },
+  "keywords": [
+    "Video",
+    "Send",
+    "Browser",
+    "Freebox",
+    "Air",
+    "Media"
+  ],
+  "author": "Volcomix",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Volcomix/freemedia/issues"
+  },
+  "homepage": "https://github.com/Volcomix/freemedia#readme",
   "dependencies": {
     "certificate-authority": "git+https://github.com/Volcomix/certificate-authority.git",
     "express": "^4.12.4",
