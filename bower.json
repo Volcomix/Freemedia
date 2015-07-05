@@ -1,0 +1,29 @@
+{
+  "name": "freemedia",
+  "version": "0.0.1",
+  "homepage": "https://github.com/Volcomix/freemedia",
+  "authors": [
+    "Volcomix"
+  ],
+  "description": "Send videos from Internet browser to Freebox via Air Media API",
+  "main": "release/Freemedia.js",
+  "keywords": [
+    "Video",
+    "Send",
+    "Browser",
+    "Freebox",
+    "Air",
+    "Media"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.0.0"
+  }
+}

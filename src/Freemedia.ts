@@ -12,11 +12,15 @@ var mitmProxy = new MitmProxy(app, new CA('FR', 'Some-State', 'Freemedia', 'Free
 var wss = new WebSocket.Server({ server: mitmProxy.server });
 
 app.use(function(req: express.Request, res: express.Response, next: Function) {
-	console.log(req.url);
-	wss.clients.forEach(function(ws) {
-		ws.send(req.url);
-	});
-	next();
+	if (req.url.indexOf('/') == 0) {
+		express.static('app')(req, res, next);
+	} else {
+		console.log(req.url);
+		wss.clients.forEach(function(ws) {
+			ws.send(req.url);
+		});
+		next();
+	}
 });
 
 app.use(mitmProxy.proxy);

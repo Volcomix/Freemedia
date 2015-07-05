@@ -7,11 +7,16 @@ var app = express();
 var mitmProxy = new MitmProxy(app, new CA('FR', 'Some-State', 'Freemedia', 'Freemedia'));
 var wss = new WebSocket.Server({ server: mitmProxy.server });
 app.use(function (req, res, next) {
-    console.log(req.url);
-    wss.clients.forEach(function (ws) {
-        ws.send(req.url);
-    });
-    next();
+    if (req.url.indexOf('/') == 0) {
+        express.static('app')(req, res, next);
+    }
+    else {
+        console.log(req.url);
+        wss.clients.forEach(function (ws) {
+            ws.send(req.url);
+        });
+        next();
+    }
 });
 app.use(mitmProxy.proxy);
 app.use(function (req, res, next) {
