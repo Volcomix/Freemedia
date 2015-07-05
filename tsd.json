@@ -28,6 +28,12 @@
     },
     "q/Q.d.ts": {
       "commit": "625cd68fed45e3230393af71bcde1d36706f3d56"
+    },
+    "polymer/polymer.d.ts": {
+      "commit": "625cd68fed45e3230393af71bcde1d36706f3d56"
+    },
+    "webcomponents.js/webcomponents.js.d.ts": {
+      "commit": "625cd68fed45e3230393af71bcde1d36706f3d56"
     }
   }
 }
