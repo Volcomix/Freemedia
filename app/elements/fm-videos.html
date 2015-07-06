@@ -1,0 +1,29 @@
+<link rel="import" href="/polymer/polymer.html">
+
+<link rel="import" href="/paper-item/paper-item.html">
+<link rel="import" href="/paper-item/paper-item-body.html">
+
+<dom-module id="fm-videos">
+    <template>
+        <template is="dom-repeat" items="{{videos}}">
+            <paper-item>
+                <paper-item-body two-line>
+                    <div>{{item.title}}</div>
+                    <div secondary>{{item.url}}</div>
+                </paper-item-body>
+            </paper-item>
+        </template>
+    </template>
+    <script>
+        /// <reference path="../../typings/tsd.d.ts"/>
+        Polymer({
+            is: "fm-videos",
+            ready: function() {
+                this.videos = [
+                    { title: 'Video 1', url: 'url1' },
+                    { title: 'Video 2', url: 'url2' }
+                ];
+            }
+        });
+    </script>
+</dom-module>
