@@ -17,9 +17,6 @@
     "node/node.d.ts": {
       "commit": "2fe8a6fda29c3340a5e5672b1809a84c88729a30"
     },
-    "ws/ws.d.ts": {
-      "commit": "2fe8a6fda29c3340a5e5672b1809a84c88729a30"
-    },
     "serve-static/serve-static.d.ts": {
       "commit": "2fe8a6fda29c3340a5e5672b1809a84c88729a30"
     },
@@ -39,6 +36,9 @@
       "commit": "2fe8a6fda29c3340a5e5672b1809a84c88729a30"
     },
     "chokidar/chokidar.d.ts": {
+      "commit": "2fe8a6fda29c3340a5e5672b1809a84c88729a30"
+    },
+    "socket.io/socket.io.d.ts": {
       "commit": "2fe8a6fda29c3340a5e5672b1809a84c88729a30"
     }
   }

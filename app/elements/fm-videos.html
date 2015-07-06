@@ -3,6 +3,8 @@
 <link rel="import" href="/paper-item/paper-item.html">
 <link rel="import" href="/paper-item/paper-item-body.html">
 
+<script src="/socket.io/socket.io.js"></script>
+
 <dom-module id="fm-videos">
     <template>
         <template is="dom-repeat" items="{{videos}}">
@@ -20,17 +22,14 @@
             
             is: "fm-videos",
             
-            webSocket: new WebSocket('ws://localhost:8080'),
+            socket: io.connect('http://localhost:8080'),
             
             ready: function() {
                 this.videos = [];
                 
-                this.webSocket.onmessage = function(event) {
-                    this.splice('videos', 0, 0, {
-                        title: 'URL visitée',
-                        url: event.data
-                    });
-                }.bind(this);
+                this.socket.on('freemedia', function(data) {
+                    this.splice('videos', 0, 0, data);
+                }.bind(this));
             }
         });
     </script>

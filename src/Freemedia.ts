@@ -1,7 +1,7 @@
 /// <reference path="../typings/tsd.d.ts"/>
 
 import express = require('express');
-import WebSocket = require('ws');
+import SocketIOStatic = require('socket.io');
 
 import CA = require('certificate-authority');
 import MitmProxy = require('express-mitm-proxy');
@@ -9,7 +9,7 @@ import MitmProxy = require('express-mitm-proxy');
 var app = express();
 
 var mitmProxy = new MitmProxy(app, new CA('FR', 'Some-State', 'Freemedia', 'Freemedia'));
-var wss = new WebSocket.Server({ server: mitmProxy.server });
+var io = SocketIOStatic(mitmProxy.server);
 
 var staticRouter = express.Router();
 staticRouter.use(express.static('app'));
@@ -18,8 +18,9 @@ staticRouter.use(express.static('bower_components'));
 var proxyRouter = express.Router();
 
 proxyRouter.use(function(req: express.Request, res: express.Response, next: Function) {
-    wss.clients.forEach(function(ws) {
-        ws.send(req.url);
+    io.emit('freemedia', {
+        title: 'URL visitée',
+        url: req.url
     });
     next();
 });
