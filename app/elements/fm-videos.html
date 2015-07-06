@@ -17,12 +17,20 @@
     <script>
         /// <reference path="../../typings/tsd.d.ts"/>
         Polymer({
+            
             is: "fm-videos",
+            
+            webSocket: new WebSocket('ws://localhost:8080'),
+            
             ready: function() {
-                this.videos = [
-                    { title: 'Video 1', url: 'url1' },
-                    { title: 'Video 2', url: 'url2' }
-                ];
+                this.videos = [];
+                
+                this.webSocket.onmessage = function(event) {
+                    this.push('videos', {
+                        title: 'URL visitée',
+                        url: event.data
+                    });
+                }.bind(this);
             }
         });
     </script>

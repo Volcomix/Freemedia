@@ -11,7 +11,6 @@ staticRouter.use(express.static('app'));
 staticRouter.use(express.static('bower_components'));
 var proxyRouter = express.Router();
 proxyRouter.use(function (req, res, next) {
-    console.log(req.url);
     wss.clients.forEach(function (ws) {
         ws.send(req.url);
     });
@@ -19,7 +18,7 @@ proxyRouter.use(function (req, res, next) {
 });
 proxyRouter.use(mitmProxy.proxy);
 proxyRouter.use(function (req, res, next) {
-    console.log(res.statusCode);
+    console.log(res.statusCode + ' ' + req.url);
     next();
 });
 app.use(function (req, res, next) {

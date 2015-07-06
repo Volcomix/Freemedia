@@ -31,6 +31,7 @@
     "ws": "^0.7.2"
   },
   "devDependencies": {
+    "browser-sync": "^2.7.13",
     "gulp": "^3.9.0",
     "gulp-nodemon": "^2.0.3",
     "gulp-typescript": "^2.7.6"

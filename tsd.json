@@ -6,34 +6,40 @@
   "bundle": "typings/tsd.d.ts",
   "installed": {
     "express/express.d.ts": {
-      "commit": "625cd68fed45e3230393af71bcde1d36706f3d56"
+      "commit": "2fe8a6fda29c3340a5e5672b1809a84c88729a30"
     },
     "gulp/gulp.d.ts": {
-      "commit": "625cd68fed45e3230393af71bcde1d36706f3d56"
+      "commit": "2fe8a6fda29c3340a5e5672b1809a84c88729a30"
     },
     "gulp-typescript/gulp-typescript.d.ts": {
-      "commit": "625cd68fed45e3230393af71bcde1d36706f3d56"
+      "commit": "2fe8a6fda29c3340a5e5672b1809a84c88729a30"
     },
     "node/node.d.ts": {
-      "commit": "625cd68fed45e3230393af71bcde1d36706f3d56"
+      "commit": "2fe8a6fda29c3340a5e5672b1809a84c88729a30"
     },
     "ws/ws.d.ts": {
-      "commit": "625cd68fed45e3230393af71bcde1d36706f3d56"
+      "commit": "2fe8a6fda29c3340a5e5672b1809a84c88729a30"
     },
     "serve-static/serve-static.d.ts": {
-      "commit": "625cd68fed45e3230393af71bcde1d36706f3d56"
+      "commit": "2fe8a6fda29c3340a5e5672b1809a84c88729a30"
     },
     "mime/mime.d.ts": {
-      "commit": "625cd68fed45e3230393af71bcde1d36706f3d56"
+      "commit": "2fe8a6fda29c3340a5e5672b1809a84c88729a30"
     },
     "q/Q.d.ts": {
-      "commit": "625cd68fed45e3230393af71bcde1d36706f3d56"
+      "commit": "2fe8a6fda29c3340a5e5672b1809a84c88729a30"
     },
     "polymer/polymer.d.ts": {
-      "commit": "625cd68fed45e3230393af71bcde1d36706f3d56"
+      "commit": "2fe8a6fda29c3340a5e5672b1809a84c88729a30"
     },
     "webcomponents.js/webcomponents.js.d.ts": {
-      "commit": "625cd68fed45e3230393af71bcde1d36706f3d56"
+      "commit": "2fe8a6fda29c3340a5e5672b1809a84c88729a30"
+    },
+    "browser-sync/browser-sync.d.ts": {
+      "commit": "2fe8a6fda29c3340a5e5672b1809a84c88729a30"
+    },
+    "chokidar/chokidar.d.ts": {
+      "commit": "2fe8a6fda29c3340a5e5672b1809a84c88729a30"
     }
   }
 }
