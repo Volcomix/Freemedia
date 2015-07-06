@@ -26,7 +26,7 @@
                 this.videos = [];
                 
                 this.webSocket.onmessage = function(event) {
-                    this.push('videos', {
+                    this.splice('videos', 0, 0, {
                         title: 'URL visitée',
                         url: event.data
                     });
