@@ -22,6 +22,13 @@
             
             is: "fm-videos",
             
+            properties: {
+                maxVideos: {
+                    type: Number,
+                    value: 20
+                }
+            },
+            
             socket: io.connect('http://localhost:8080'),
             
             ready: function() {

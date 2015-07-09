@@ -18,18 +18,15 @@ staticRouter.use(express.static('bower_components'));
 var proxyRouter = express.Router();
 
 proxyRouter.use(function(req: express.Request, res: express.Response, next: Function) {
-    io.emit('freemedia', {
-        title: 'URL visitée',
-        url: req.url
+    mitmProxy.proxy(req, res, next).once('data', function(data) {
+        var contentType = res.get('Content-Type');
+        if (contentType && contentType.indexOf('video') == 0) {
+            io.emit('freemedia', {
+                title: req.get('Referer'),
+                url: req.url
+            });
+        }
     });
-    next();
-});
-
-proxyRouter.use(mitmProxy.proxy);
-
-proxyRouter.use(function(req: express.Request, res: express.Response, next: Function) {
-    console.log(res.statusCode + ' ' + req.url);
-    next();
 });
 
 app.use(function(req: express.Request, res: express.Response, next: Function) {
