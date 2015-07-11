@@ -1,18 +1,17 @@
 <link rel="import" href="/polymer/polymer.html">
+        
+<link rel="import" href="/paper-material/paper-material.html">
 
-<link rel="import" href="/paper-item/paper-item.html">
-<link rel="import" href="/paper-item/paper-item-body.html">
+<link rel="import" href="fm-video.html">
 
 <dom-module id="fm-videos">
+    
     <template>
-        <template is="dom-repeat" items="{{videos}}">
-            <paper-item>
-                <paper-item-body two-line>
-                    <div>{{item.title}}</div>
-                    <div secondary>{{item.url}}</div>
-                </paper-item-body>
-            </paper-item>
-        </template>
+        <paper-material>
+            <template is="dom-repeat" items="{{videos}}">
+                <fm-video video="{{item}}"></fm-video>
+            </template>
+        </paper-material>
     </template>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -33,7 +32,6 @@
             
             ready: function() {
                 this.videos = [];
-                
                 this.socket.on('freemedia', function(data) {
                     this.splice('videos', 0, 0, data);
                 }.bind(this));

@@ -1,0 +1,59 @@
+<link rel="import" href="/polymer/polymer.html">
+
+<link rel="import" href="/paper-styles/paper-styles.html">
+
+<link rel="import" href="/iron-icons/iron-icons.html">
+
+<link rel="import" href="/paper-item/paper-item.html">
+<link rel="import" href="/paper-item/paper-item-body.html">
+<link rel="import" href="/paper-icon-button/paper-icon-button.html">
+
+<dom-module id="fm-video">
+	<style>
+		paper-icon-button {
+	        color: var(--paper-grey-400);
+	    }
+	    
+	    paper-icon-button:hover {
+	        color: var(--paper-green-500);
+	    }
+	</style>
+	
+	<template>
+		<paper-item>
+            <paper-item-body two-line>
+                <div>{{video.title}}</div>
+                <div secondary>{{video.url}}</div>
+            </paper-item-body>
+            <paper-icon-button hidden$="{{buttonHidden}}" icon="send"></paper-icon-button>
+        </paper-item>
+	</template>
+	
+	<script>
+        /// <reference path="../../typings/tsd.d.ts"/>
+        Polymer({
+            is: "fm-video",
+			
+			properties: {
+				video: Object
+			},
+			
+			listeners: {
+				mouseenter: 'showButton',
+				mouseleave: 'hideButton'
+			},
+			
+			ready: function() {
+				this.buttonHidden = true;
+			},
+			
+			showButton: function(e) {
+				this.buttonHidden = false;
+			},
+			
+			hideButton: function(e) {
+				this.buttonHidden = true;
+			}
+		});
+	</script>
+</dom-module>
