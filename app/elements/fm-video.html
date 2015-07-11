@@ -25,7 +25,8 @@
                 <div>{{video.title}}</div>
                 <div secondary>{{video.url}}</div>
             </paper-item-body>
-            <paper-icon-button hidden$="{{buttonHidden}}" icon="send"></paper-icon-button>
+            <paper-icon-button hidden$="{{buttonHidden}}" icon="send" on-click="sendVideo">
+			</paper-icon-button>
         </paper-item>
 	</template>
 	
@@ -45,6 +46,10 @@
 			
 			ready: function() {
 				this.buttonHidden = true;
+			},
+			
+			sendVideo: function() {
+				this.fire('video-sent', 'Video sent to Freebox Player');
 			},
 			
 			showButton: function(e) {

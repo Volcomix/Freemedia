@@ -1,6 +1,7 @@
 <link rel="import" href="/polymer/polymer.html">
         
 <link rel="import" href="/paper-material/paper-material.html">
+<link rel="import" href="/paper-toast/paper-toast.html">
 
 <link rel="import" href="fm-video.html">
 
@@ -12,6 +13,7 @@
                 <fm-video video="{{item}}"></fm-video>
             </template>
         </paper-material>
+        <paper-toast id="message" text="{{message}}"></paper-toast>
     </template>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -28,6 +30,10 @@
                 }
             },
             
+            listeners: {
+                'video-sent': 'videoSent'
+            },
+            
             socket: io.connect('http://localhost:8080'),
             
             ready: function() {
@@ -35,6 +41,11 @@
                 this.socket.on('freemedia', function(data) {
                     this.splice('videos', 0, 0, data);
                 }.bind(this));
+            },
+            
+            videoSent: function(e) {
+                this.message = e.detail;
+                this.$.message.show();
             }
         });
     </script>
